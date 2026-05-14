@@ -49,6 +49,12 @@ Obstacle::Obstacle(QVector2D start, QVector2D end, ObstacleType material, qreal 
     //pen.setWidthF(10*0.2);
 
     switch (this->material) {
+    case GenericWall:
+        pen.setColor(Qt::lightGray);
+        pen.setWidth(10*0.2);
+        this->properties.relative_permittivity = epsilon_r;
+        this->properties.conductivity = 1; // TODO: FIXME: value ?
+        break;
     case BrickWall:
         pen.setColor(Qt::darkRed);
         pen.setWidthF(10*0.18);

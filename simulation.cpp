@@ -26,10 +26,16 @@ void Simulation::createWalls()
         this->obstacles.clear();
     }
 
+    QList<Obstacle*> walls;
+    ObstacleType generic_material = GenericWall;
+    qreal thickness = 0.4; // 50cm
+    walls.append(new Obstacle(QVector2D(0,0), QVector2D(15,0), generic_material, thickness));
+
+
     // Add obstacles:
     QList<Obstacle*> concrete_walls;
     ObstacleType concrete = ConcreteWall;
-    qreal thickness = 0.3; // 30cm
+    thickness = 0.3; // 30cm
     concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(15,0), concrete, thickness));
     concrete_walls.append(new Obstacle(QVector2D(15,0), QVector2D(15,4), concrete, thickness));
     concrete_walls.append(new Obstacle(QVector2D(7,0), QVector2D(7,4), concrete, thickness));
@@ -62,6 +68,10 @@ void Simulation::createWalls()
     all_obstacles.append(drywall_walls);
     all_obstacles.append(glass_window);
     all_obstacles.append(metal_lift_door); // last one is the metal lift door
+
+    // TODO:
+    //all_obstacles = walls;
+    //this->obstacles = walls;
 
     this->obstacles = all_obstacles;
     qDebug() << "Walls created";

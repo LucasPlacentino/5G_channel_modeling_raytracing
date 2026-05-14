@@ -18,6 +18,7 @@ struct WallProperties {
 };
 
 enum ObstacleType {
+    GenericWall,
     BrickWall,
     Window,
     MetalWall,

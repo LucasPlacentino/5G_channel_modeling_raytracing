@@ -22,7 +22,7 @@ constexpr qreal wavelength = c/freq;
 constexpr qreal lambda = wavelength;
 const qreal Z_0 = sqrt(mu_0 / epsilon_0); // vacuum impedance
 
-constexpr qreal relative_permativity = 4; // (\espilon_r) relative permittivity of ALL materials
+constexpr qreal epsilon_r = 4; // relative permittivity of ALL materials
 
 constexpr qreal max_x = 15;
 constexpr qreal min_x = 0;
