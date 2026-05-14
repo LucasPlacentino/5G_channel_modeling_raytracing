@@ -23,7 +23,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(5G_channel_modeling_raytracing
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        tp4.h tp4.cpp
+        validation.h validation.cpp
         simulation.h simulation.cpp
         ray.h ray.cpp
         obstacle.h obstacle.cpp

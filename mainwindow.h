@@ -38,8 +38,8 @@ private slots:
     void on_liftOnFloorCheckBox_clicked(bool checked);
     void on_showCellOutlineCheckBox_toggled(bool checked);
     void on_resolutionComboBox_currentIndexChanged(int index);
-    void on_actionRun_TP4_Simulation_triggered();
-    void on_actionSave_TP4_image_triggered();
+    void on_actionRun_Validation_Simulation_triggered();
+    void on_actionSave_Validation_image_triggered();
     void on_cellXspinBox_valueChanged(double x);
     void on_cellYspinBox_valueChanged(double y);
 
@@ -55,6 +55,6 @@ private:
 
     void toggleCellParametersLayout(bool enabled);
     void toggleCoverageParametersLayout(bool enabled);
-    void saveImage(QGraphicsView *view, bool isTP4);
+    void saveImage(QGraphicsView *view, bool isValidation);
 };
 #endif // MAINWINDOW_H

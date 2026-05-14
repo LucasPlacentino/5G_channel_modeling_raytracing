@@ -17,9 +17,9 @@
 #include <QElapsedTimer>
 
 // Defines for debugging:
-#define DRAW_RAYS_TP4 1
-//#define DRAW_IMAGES_TP4 1
-#define DRAW_REFLECTION_POINTS_TP4 1
+#define DRAW_RAYS_VALIDATION 1
+//#define DRAW_IMAGES_VALIDATION 1
+#define DRAW_REFLECTION_POINTS_VALIDATION 1
 
 // pour plus de simplicité
 using namespace std;
@@ -27,8 +27,14 @@ using namespace std;
 // constants
 constexpr qreal epsilon_0 = 8.8541878128e-12;
 constexpr qreal mu_0 = 4 * M_PI * 1e-7;
-constexpr qreal freq = 868.3e6; // 868.3 MHz
+constexpr qreal freq = 26e9; // 26 GHz
 constexpr qreal c = 299792458;
+
+// TODO: implement -------
+constexpr qreal B = 200e6; // 200MHz bandwidth
+constexpr qreal P_TX_dBm = 20;
+constexpr qreal P_TX = 0.1;
+// -----------------------
 
 constexpr qreal G_TXP_TX = 1.64e-3; // given 1.64mW ~= 2.15dBm
 constexpr qreal beta_0 =  2*M_PI*freq/c; // beta
@@ -139,11 +145,11 @@ QList<Wall*> wall_list = { // list containing all the created walls
     new Wall(wall3start,wall3end, 0.15, 3),
 };
 
-class RaySegmentTP4 : public QLineF { // Finite segment of a ray
+class RaySegmentValidation : public QLineF { // Finite segment of a ray
 public:
     qreal distance; //? not used ?
     QGraphicsLineItem* graphics = new QGraphicsLineItem(); // segment's QGraphicsItem
-    RaySegmentTP4(qreal start_x, qreal start_y, qreal end_x, qreal end_y){
+    RaySegmentValidation(qreal start_x, qreal start_y, qreal end_x, qreal end_y){
         // RaySegmentTP4 object constructor
         this->setLine(start_x, start_y, end_x, end_y);
         this->graphics->setLine(start_x, -start_y, end_x, -end_y);
@@ -151,14 +157,14 @@ public:
     }
 };
 
-class RayTP4 { // RayTP4, made of one or multiple ray segments
+class RayValidation { // RayValidation, made of one or multiple ray segments
 public:
-    RayTP4(QPointF start, QPointF end) {
+    RayValidation(QPointF start, QPointF end) {
         // RayTP4 object constructor
         this->start=start;
         this->end=end;
     }
-    QList<RaySegmentTP4*> segments; // list of this ray's segment(s)
+    QList<RaySegmentValidation*> segments; // list of this ray's segment(s)
     int num_reflections = 0;
     QPointF start; // ray's starting point (TX)
     QPointF end; // ray's end point (RX)
@@ -214,7 +220,7 @@ public:
             break;
         }
         QList<QGraphicsLineItem*> ray_graphics;
-        for (RaySegmentTP4* ray_segment: this->segments) {
+        for (RaySegmentValidation* ray_segment: this->segments) {
         //for (int i=0; i<this->segments.length(); i++) {
             //qDebug() << "Adding this segment to list ray_graphics";
             ray_segment->graphics->setPen(ray_pen);
@@ -240,12 +246,12 @@ public:
         return this->distance;
     }
 };
-QList<RayTP4*> all_rays; // list in which all computed rays will be added
+QList<RayValidation*> all_rays; // list in which all computed rays will be added
 
-class TransmitterTP4 : public QVector2D { // TX class
+class TransmitterValidation : public QVector2D { // TX class
 public:
-    TransmitterTP4(qreal x, qreal y){
-        // TransmitterTP4 object constructor
+    TransmitterValidation(qreal x, qreal y){
+        // TransmitterValidation object constructor
         this->setX(x);
         this->setY(y);
         this->graphics->setToolTip(QString("Test transmitter x=%1 y=%2").arg(this->x(),this->y()));
@@ -265,10 +271,10 @@ public:
     QGraphicsEllipseItem* graphics = new QGraphicsEllipseItem(); // TX's QGraphicsItem
     //qreal power; // ! in Watts
 };
-class ReceiverTP4 : public QVector2D { // RX class
+class ReceiverValidation : public QVector2D { // RX class
 public:
-    ReceiverTP4(qreal x, qreal y) {
-        // ReceiverTP4 object constructor
+    ReceiverValidation(qreal x, qreal y) {
+        // ReceiverValidation object constructor
         this->setX(x);
         this->setY(y);
         this->graphics->setToolTip(QString("Test receiver x=%1 y=%2").arg(this->x(),this->y()));
@@ -280,11 +286,11 @@ public:
     QGraphicsRectItem* graphics = new QGraphicsRectItem(); // RX's QGraphicsItem
     qreal power; // ! in Watts
 };
-TransmitterTP4 TX(32,10); // initialized global TX
-ReceiverTP4 RX(47, 65); // initialized global RX
+TransmitterValidation TX(32,10); // initialized global TX
+ReceiverValidation RX(47, 65); // initialized global RX
 // Debug TEST, reverse positions :
-//ReceiverTP4 RX(32,10); // initialized global TX
-//TransmitterTP4 TX(47, 65); // initialized global RX
+//ReceiverValidation RX(32,10); // initialized global TX
+//TransmitterValidation TX(47, 65); // initialized global RX
 
 QList<QGraphicsEllipseItem*> tx_images; // used for debugging: list of images graphics
 QList<QGraphicsEllipseItem*> reflection_points; // used for debugging: list of reflection points graphics
@@ -297,7 +303,7 @@ qreal computeTotalPower() // returns final total power computation for this RX
 {
     qreal res;
     complex<qreal> sum = 0;
-    for (RayTP4* ray : all_rays) {
+    for (RayValidation* ray : all_rays) {
         complex<qreal> ray_coeffs = 1;
         for (complex<qreal> coeff : ray->coeffsList) {
             ray_coeffs*=coeff;
@@ -415,7 +421,7 @@ QVector2D calculateReflectionPoint(const QVector2D& _start, const QVector2D& _en
 
 void drawAllRays(QGraphicsScene* scene) {
     // Adds all rays in all_rays QList to the scene
-    for (RayTP4* ray : all_rays) {
+    for (RayValidation* ray : all_rays) {
     //for (int i=0; i<all_rays.length(); i++) {
         qDebug() << "Adding ray to scene";
         //QList<QGraphicsLineItem*> segments_graphics = all_rays.at(i)->getSegmentsGraphics();
@@ -430,7 +436,7 @@ void drawAllRays(QGraphicsScene* scene) {
 
 // scène graphique, encore une fois merci gpt pour la syntaxe
 //QGraphicsScene* createGraphicsScene(const QVector2D& RX, const QVector2D& TX) {
-QGraphicsScene* createGraphicsScene(ReceiverTP4& RX, TransmitterTP4& TX) {
+QGraphicsScene* createGraphicsScene(ReceiverValidation& RX, TransmitterValidation& TX) {
     // creates the QGraphicsScene (to give to QGraphicsView) and adds all graphics to it
 
     auto* scene = new QGraphicsScene();
@@ -442,7 +448,7 @@ QGraphicsScene* createGraphicsScene(ReceiverTP4& RX, TransmitterTP4& TX) {
     }
     qDebug() << "All walls added to scene.";
 
-#ifdef DRAW_RAYS_TP4
+#ifdef DRAW_RAYS_VALIDATION
     // Draw all rays (their segments) from the all_rays list
     drawAllRays(scene);
 #endif
@@ -462,7 +468,7 @@ QGraphicsScene* createGraphicsScene(ReceiverTP4& RX, TransmitterTP4& TX) {
     scene->addItem(TX.graphics);
     qDebug() << "TX.graphics:" << TX.graphics->rect();
 
-#ifdef DRAW_IMAGES_TP4
+#ifdef DRAW_IMAGES_VALIDATION
     // For debugging: draw all images from the tx_images list
     for (QGraphicsEllipseItem* image_graphics : tx_images) {
         image_graphics->setPen(QPen(Qt::darkYellow));
@@ -472,7 +478,7 @@ QGraphicsScene* createGraphicsScene(ReceiverTP4& RX, TransmitterTP4& TX) {
     }
 #endif
 
-#ifdef DRAW_REFLECTION_POINTS_TP4
+#ifdef DRAW_REFLECTION_POINTS_VALIDATION
     // For debugging: draw all reflection points from the reflection_points list
     for (QGraphicsEllipseItem* reflection_graphics : reflection_points) {
         reflection_graphics->setPen(QPen(Qt::magenta));
@@ -539,7 +545,7 @@ bool checkSameSideOfWall(const QVector2D& _normal, const QVector2D& _TX, const Q
     return res;
 }
 
-bool checkRaySegmentIntersectsWall(const Wall* wall, RaySegmentTP4* ray_segment, QPointF* intersection_point=nullptr) {
+bool checkRaySegmentIntersectsWall(const Wall* wall, RaySegmentValidation* ray_segment, QPointF* intersection_point=nullptr) {
     // returns true if ray_segment intersects wall
     // the intersection_point pointer's value is set wit hthe intersection point coordinates if they intersect
     int _intersection_type = ray_segment->intersects(wall->line, intersection_point); // also writes to intersection pointer the QPointF
@@ -547,7 +553,7 @@ bool checkRaySegmentIntersectsWall(const Wall* wall, RaySegmentTP4* ray_segment,
     return intersects_wall;
 }
 
-qreal makeTransmission(RaySegmentTP4* ray_segment, Wall* wall) {
+qreal makeTransmission(RaySegmentValidation* ray_segment, Wall* wall) {
     // computes the final |T| coeff for the ray_segment's transmission with this wall
     qDebug() << "wall:" << wall->line.p1() << "-" << wall->line.p2();
     QVector2D _d = QVector2D(ray_segment->p1())-QVector2D(ray_segment->p2());
@@ -561,10 +567,10 @@ qreal makeTransmission(RaySegmentTP4* ray_segment, Wall* wall) {
     return T_coeff;
 }
 
-void checkTransmissions(RayTP4* _ray, QList<Wall*> _reflection_walls) {
+void checkTransmissions(RayValidation* _ray, QList<Wall*> _reflection_walls) {
     // checks for every segment in this ray if they intersect a wall (which isn't a wall already used for a reflection by this ray)
     // if so: adds the Transmission coefficient to this ray's coeffs list
-    for (RaySegmentTP4* ray_segment : _ray->segments) {
+    for (RaySegmentValidation* ray_segment : _ray->segments) {
         for (Wall* wall : wall_list) {
             //qDebug() << "pwall" << &wall;
             if (!_reflection_walls.contains(wall)) { // is NOT reflection wall
@@ -585,7 +591,7 @@ void checkTransmissions(RayTP4* _ray, QList<Wall*> _reflection_walls) {
     }
 }
 
-void addReflection(RayTP4* _ray, const QVector2D& _p1, const QVector2D& _p2, Wall* wall){
+void addReflection(RayValidation* _ray, const QVector2D& _p1, const QVector2D& _p2, Wall* wall){
     // computes the final |Gamma| coeff for the ray_segment's reflection with this wall, and adds it to this ray's coeffs list
     QVector2D _d = _p2-_p1;
     qreal _cos_theta_i = abs(QVector2D::dotProduct(_d.normalized(),wall->normal));
@@ -615,7 +621,7 @@ void computeReflections(const QVector2D& _RX, const QVector2D& _TX)
         if (checkSameSideOfWall(wall->normal,_TX,_RX)) {
             //same side of this wall, can make a reflection
             qDebug() << "Same side of wall TX and RX:" << wall << _TX.toPointF() << _RX.toPointF() ;
-            RayTP4* ray_1_reflection = new RayTP4(_TX.toPointF(), _RX.toPointF());
+            RayValidation* ray_1_reflection = new RayValidation(_TX.toPointF(), _RX.toPointF());
 
             QVector2D _imageTX = computeImage(_TX, wall);
             qDebug() << "_image:" << _imageTX.x() << _imageTX.y();
@@ -623,7 +629,7 @@ void computeReflections(const QVector2D& _RX, const QVector2D& _TX)
             QVector2D _P_r = calculateReflectionPoint(_imageTX,_RX,wall);
 
             // CHECK IF REFLECTION IS ON THE WALL AND NOT ITS EXTENSION:
-            RaySegmentTP4* test_segment = new RaySegmentTP4(_imageTX.x(),_imageTX.y(),_RX.x(),_RX.y());
+            RaySegmentValidation* test_segment = new RaySegmentValidation(_imageTX.x(),_imageTX.y(),_RX.x(),_RX.y());
             if (!checkRaySegmentIntersectsWall(wall, test_segment)) {
                 // RAY DOES NOT TRULY INTERSECT THE WALL (only the wall extension) ignore this one-reflection ray at this wall
                 qDebug() << "ignore";
@@ -639,9 +645,9 @@ void computeReflections(const QVector2D& _RX, const QVector2D& _TX)
             reflection_points.append(new QGraphicsEllipseItem(_P_r.x()-1, -_P_r.y()-1, 2, 2));
 
             // create ray segments between points
-            QList<RaySegmentTP4*> ray_segments;
-            ray_segments.append(new RaySegmentTP4(_TX.x(),_TX.y(),_P_r.x(),_P_r.y())); // first segment
-            ray_segments.append(new RaySegmentTP4(_P_r.x(),_P_r.y(),_RX.x(),_RX.y())); // last segment
+            QList<RaySegmentValidation*> ray_segments;
+            ray_segments.append(new RaySegmentValidation(_TX.x(),_TX.y(),_P_r.x(),_P_r.y())); // first segment
+            ray_segments.append(new RaySegmentValidation(_P_r.x(),_P_r.y(),_RX.x(),_RX.y())); // last segment
 
             ray_1_reflection->segments = ray_segments;
             addReflection(ray_1_reflection,_imageTX,_RX,wall);
@@ -662,7 +668,7 @@ void computeReflections(const QVector2D& _RX, const QVector2D& _TX)
                 //if (wall_2 != wall && checkSameSideOfWall(wall_2->normal,_imageTX,_RX)) {
                 if (wall_2 != wall) {
                     qDebug() << "Same side of wall imageTX and RX --- wall_2:" << wall_2->line.p1() << wall_2->line.p2() << ", imageTX:" << _imageTX.toPointF() << ", RX:" << _RX.toPointF() ;
-                    RayTP4* ray_2_reflection = new RayTP4(_TX.toPointF(),_RX.toPointF());
+                    RayValidation* ray_2_reflection = new RayValidation(_TX.toPointF(),_RX.toPointF());
 
                     QVector2D _image_imageTX = computeImage(_imageTX,wall_2);
                     qDebug() << "_image_image:" << _image_imageTX.x() << _image_imageTX.y();
@@ -673,8 +679,8 @@ void computeReflections(const QVector2D& _RX, const QVector2D& _TX)
                         qDebug() << "------> P_r_2_last = P_r_2_first !!!)";
                     }
 
-                    RaySegmentTP4* test_segment_1 = new RaySegmentTP4(_image_imageTX.x(),_image_imageTX.y(),_RX.x(),_RX.y());
-                    RaySegmentTP4* test_segment_2 = new RaySegmentTP4(_imageTX.x(),_imageTX.y(),_P_r_2_last.x(),_P_r_2_last.y());
+                    RaySegmentValidation* test_segment_1 = new RaySegmentValidation(_image_imageTX.x(),_image_imageTX.y(),_RX.x(),_RX.y());
+                    RaySegmentValidation* test_segment_2 = new RaySegmentValidation(_imageTX.x(),_imageTX.y(),_P_r_2_last.x(),_P_r_2_last.y());
                     if (!checkRaySegmentIntersectsWall(wall_2, test_segment_1) || !checkRaySegmentIntersectsWall(wall,test_segment_2)) {
                         qDebug() << "ignore";
                         delete ray_2_reflection;
@@ -692,10 +698,10 @@ void computeReflections(const QVector2D& _RX, const QVector2D& _TX)
                     reflection_points.append(new QGraphicsEllipseItem(_P_r_2_last.x()-1, -_P_r_2_last.y()-1, 2, 2));
                     reflection_points.append(new QGraphicsEllipseItem(_P_r_2_first.x()-1, -_P_r_2_first.y()-1, 2, 2));
 
-                    QList<RaySegmentTP4*> ray_segments_2;
-                    ray_segments_2.append(new RaySegmentTP4(_TX.x(),_TX.y(),_P_r_2_first.x(),_P_r_2_first.y()));
-                    ray_segments_2.append(new RaySegmentTP4(_P_r_2_first.x(),_P_r_2_first.y(),_P_r_2_last.x(),_P_r_2_last.y()));
-                    ray_segments_2.append(new RaySegmentTP4(_P_r_2_last.x(),_P_r_2_last.y(),_RX.x(),_RX.y()));
+                    QList<RaySegmentValidation*> ray_segments_2;
+                    ray_segments_2.append(new RaySegmentValidation(_TX.x(),_TX.y(),_P_r_2_first.x(),_P_r_2_first.y()));
+                    ray_segments_2.append(new RaySegmentValidation(_P_r_2_first.x(),_P_r_2_first.y(),_P_r_2_last.x(),_P_r_2_last.y()));
+                    ray_segments_2.append(new RaySegmentValidation(_P_r_2_last.x(),_P_r_2_last.y(),_RX.x(),_RX.y()));
 
                     ray_2_reflection->segments = ray_segments_2;
                     addReflection(ray_2_reflection,_imageTX,_P_r_2_last,wall);
@@ -716,8 +722,8 @@ void computeDirect(const QVector2D& _RX, const QVector2D& _TX)
 {
     // Computes the direct ray: checks all walls between RX and TX and adds
     // their computed transmission coefficients to the direct ray list of coeffs
-    RayTP4* direct_ray = new RayTP4(_TX.toPointF(), _RX.toPointF());
-    RaySegmentTP4* _direct_line = new RaySegmentTP4(_RX.x(), _RX.y(), _TX.x(), _TX.y());
+    RayValidation* direct_ray = new RayValidation(_TX.toPointF(), _RX.toPointF());
+    RaySegmentValidation* _direct_line = new RaySegmentValidation(_RX.x(), _RX.y(), _TX.x(), _TX.y());
     for (Wall* wall : wall_list) {
     //for (int i=0; i<wall_list.length(); i++) {
         //Wall* wall = wall_list[i];
@@ -895,7 +901,7 @@ void runTestOui1(QGraphicsScene* scene) { // ! TODO: old code when testing, remo
 
 
 //int main(int argc, char *argv[]) {
-QGraphicsView* runTP4(){
+QGraphicsView* runValidation(){
     //QApplication app(argc, argv);
 
     QElapsedTimer timer;
@@ -918,7 +924,7 @@ QGraphicsView* runTP4(){
     view->setAttribute(Qt::WA_AlwaysShowToolTips); //? maybe necessary ?
 
     // TODO: find good values
-#ifdef DRAW_IMAGES_TP4
+#ifdef DRAW_IMAGES_VALIDATION
     view->setFixedSize(500, 750);
     view->scale(2.6, 2.6);
 #else
@@ -934,7 +940,7 @@ QGraphicsView* runTP4(){
     qDebug() << QString((10*std::log10(RX.power*1000) >= -65) ? "-> Enough power:" : "-> Not enough power:") << 10*std::log10(RX.power*1000) << "dBm";
 
     // prints RX power values only for each ray
-    for (RayTP4* ray : all_rays) {
+    for (RayValidation* ray : all_rays) {
         complex<qreal> coeffs_product = 1;
         for (complex<qreal> coeff : ray->coeffsList) {
             qDebug() << "ray coeff:" << coeff.real() << "+j" << coeff.imag();

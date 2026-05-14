@@ -8,8 +8,8 @@
 #include <QDir>
 
 #include "simulation.h"
-#include "tp4.h"
-QGraphicsView* TP4view;
+#include "validation.h"
+QGraphicsView* Validation_view;
 
 Simulation simulation = Simulation(); // The global simulation object, use `extern Simulation simulation;` in other files?
 
@@ -170,7 +170,7 @@ void MainWindow::on_actionAbout_triggered()
                           "<br>By Lucas Placentino & Salman Houdaibi"));
 }
 
-void MainWindow::saveImage(QGraphicsView* view = simulation.view, bool isTP4 = false)
+void MainWindow::saveImage(QGraphicsView* view = simulation.view, bool isValidation = false)
 {
     QSize size = view->scene()->sceneRect().size().toSize()*10; // get the Scene size
     //QImage img(size, QImage::Format_ARGB32); // scene's size, Format_RGBA64 ?
@@ -339,15 +339,15 @@ void MainWindow::on_resolutionComboBox_currentIndexChanged(int index)
 }
 
 
-void MainWindow::on_actionRun_TP4_Simulation_triggered()
+void MainWindow::on_actionRun_Validation_Simulation_triggered()
 {
-    TP4view = runTP4();
+    Validation_view = runValidation();
 }
 
 
-void MainWindow::on_actionSave_TP4_image_triggered()
+void MainWindow::on_actionSave_Validation_image_triggered()
 {
-    saveImage(TP4view);
+    saveImage(Validation_view);
 }
 
 void MainWindow::on_cellXspinBox_valueChanged(double x)
