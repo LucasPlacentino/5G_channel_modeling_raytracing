@@ -34,7 +34,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>802.11ay Raytracing Simulator</string>
+   <string>5G channel modeling raytracing</string>
   </property>
   <property name="windowIcon">
    <iconset>
@@ -147,6 +147,18 @@
         </item>
         <item>
          <widget class="QProgressBar" name="simulationProgressBar">
+          <property name="minimumSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+          <property name="baseSize">
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
           <property name="value">
            <number>0</number>
           </property>
