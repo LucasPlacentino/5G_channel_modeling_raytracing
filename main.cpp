@@ -1,7 +1,6 @@
 #include "mainwindow.h"
 
 #include <QApplication>
-//#include "algorithme.h"
 
 int main(int argc, char *argv[])
 {
@@ -14,8 +13,6 @@ int main(int argc, char *argv[])
 
     MainWindow mainWin;
     mainWin.show();
-
-    //runAlgo();
 
     return app.exec();
 }
