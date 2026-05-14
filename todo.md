@@ -99,3 +99,11 @@ Sensitivity depends **linearly (in log scale)** on bit rate:
 Produce a **surrogate(simplified) channel model**. Adding extra features is a welcome bonus.
 
 * Deliverable: **PDF report, and documented code** on UV
+
+## Extras (if time)
+* Add ground reflection
+* Add recursive reflections (for 4+ reflections)
+* Add more advanced channel models (TDL, impulse responses, etc.)
+* Add 3D (BS and UE not on same plane) ?
+* Add multi-BS deployment optimization (UE connects to BS with most power, do not add up power from two BSs) ?
+
