@@ -23,7 +23,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(5G_channel_modeling_raytracing
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        validation.h validation.cpp
+        #validation.h validation.cpp
+        validation_free_space.h validation_free_space.cpp
         simulation.h simulation.cpp
         ray.h ray.cpp
         obstacle.h obstacle.cpp
