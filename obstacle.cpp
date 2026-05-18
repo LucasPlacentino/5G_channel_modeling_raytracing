@@ -45,53 +45,58 @@ Obstacle::Obstacle(QVector2D start, QVector2D end, ObstacleType material, qreal 
     //qDebug("Setting Wall graphics line...");
     this->graphics->setLine(graphics_line);
 
-    QPen pen(Qt::gray);
-    //pen.setWidthF(10*0.2);
+    // QPen pen(Qt::gray);
+    // //pen.setWidthF(10*0.2);
 
-    switch (this->material) {
-    case GenericWall:
-        pen.setColor(Qt::lightGray);
-        pen.setWidth(10*0.2);
-        this->properties.relative_permittivity = epsilon_r;
-        this->properties.conductivity = 1; // TODO: FIXME: value ?
-        break;
-    case BrickWall:
-        pen.setColor(Qt::darkRed);
-        pen.setWidthF(10*0.18);
-        this->properties.relative_permittivity = 3.95;
-        this->properties.conductivity = 0.073;
-        break;
-    case Window:
-        pen.setColor(Qt::white);
-        pen.setWidthF(10*0.08);
-        this->properties.relative_permittivity = 6.3919;
-        this->properties.conductivity = 0.00107;
-        break;
-    case MetalWall:
-        pen.setColor(Qt::gray);
-        pen.setWidthF(10*0.1);
-        this->properties.relative_permittivity = 1;
-        this->properties.conductivity = 1e7;
-        break;
-    case DryWall:
-        pen.setColor(Qt::lightGray);
-        pen.setWidthF(10*0.12);
-        this->properties.relative_permittivity = 2.7;
-        this->properties.conductivity = 0.05349;
-        break;
-    case ConcreteWall:
-        pen.setColor(Qt::darkMagenta);
-        pen.setWidthF(10*0.2);
-        this->properties.relative_permittivity = 6.4954;
-        this->properties.conductivity = 1.43;
-        break;
-    default:
-        pen.setColor(Qt::white);
-        pen.setWidthF(10*0.12);
-        this->properties.relative_permittivity = 1e-10;
-        this->properties.conductivity = 1e-10;
-        break;
-    }
+    pen.setColor(Qt::lightGray);
+    pen.setWidth(10*0.2);
+    this->properties.relative_permittivity = epsilon_r; // in parameters.h
+    this->properties.conductivity = 0.01; // TODO: FIXME: value ?
+
+    // switch (this->material) {
+    // case GenericWall:
+    //     pen.setColor(Qt::lightGray);
+    //     pen.setWidth(10*0.2);
+    //     this->properties.relative_permittivity = epsilon_r;
+    //     this->properties.conductivity = 0.01; // TODO: FIXME: value ?
+    //     break;
+    // case BrickWall:
+    //     pen.setColor(Qt::darkRed);
+    //     pen.setWidthF(10*0.18);
+    //     this->properties.relative_permittivity = 3.95;
+    //     this->properties.conductivity = 0.073;
+    //     break;
+    // case Window:
+    //     pen.setColor(Qt::white);
+    //     pen.setWidthF(10*0.08);
+    //     this->properties.relative_permittivity = 6.3919;
+    //     this->properties.conductivity = 0.00107;
+    //     break;
+    // case MetalWall:
+    //     pen.setColor(Qt::gray);
+    //     pen.setWidthF(10*0.1);
+    //     this->properties.relative_permittivity = 1;
+    //     this->properties.conductivity = 1e7;
+    //     break;
+    // case DryWall:
+    //     pen.setColor(Qt::lightGray);
+    //     pen.setWidthF(10*0.12);
+    //     this->properties.relative_permittivity = 2.7;
+    //     this->properties.conductivity = 0.05349;
+    //     break;
+    // case ConcreteWall:
+    //     pen.setColor(Qt::darkMagenta);
+    //     pen.setWidthF(10*0.2);
+    //     this->properties.relative_permittivity = 6.4954;
+    //     this->properties.conductivity = 1.43;
+    //     break;
+    // default:
+    //     pen.setColor(Qt::white);
+    //     pen.setWidthF(10*0.12);
+    //     this->properties.relative_permittivity = 1e-10;
+    //     this->properties.conductivity = 1e-10;
+    //     break;
+    // }
     this->graphics->setPen(pen);
 
     this->properties.epsilon = epsilon_0 * this->properties.relative_permittivity;

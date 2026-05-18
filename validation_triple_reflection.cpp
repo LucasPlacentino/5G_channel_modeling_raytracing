@@ -439,8 +439,15 @@ void testCase_TripleReflection()
                 } else {
                     valid_count++;
                     qDebug() << "✓ Found valid triple reflection for walls:" << wall_names;
+
+                    // Calculate incidence angle using dot product of ray vector and wall normal
+                    //QVector2D ray_dir = (reflection_point - _tx).normalized();
+                    //qreal cos_theta = std::abs(QVector2D::dotProduct(ray_dir, wall->normal));
+                    //qreal theta_i_rad = std::acos(cos_theta);
                     
                     qreal gamma_mag = computeReflectionCoeff_Magnitude_TR(0.0);
+                    //qreal gamma_mag = computeReflectionCoeff_Magnitude_TR(theta_i_rad);
+                    
                     qreal P_theoretical = computeTheoreticalPower_TripleReflection(
                         tx_pos, rx_pos, refl_1, refl_2, refl_3, tx->power, tx->gain, rx->gain, 
                         gamma_mag, gamma_mag, gamma_mag

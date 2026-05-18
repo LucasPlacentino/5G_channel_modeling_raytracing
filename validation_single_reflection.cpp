@@ -334,7 +334,12 @@ void testCase_SingleReflection()
     QList<QString> wall_names = {"Horizontal", "Vertical", "Slanted"};
 
     // Reflection coefficient (same for all walls in this test)
+    // Calculate incidence angle using dot product of ray vector and wall normal
+    //QVector2D ray_dir = (reflection_point - _tx).normalized();
+    //qreal cos_theta = std::abs(QVector2D::dotProduct(ray_dir, wall->normal));
+    //qreal theta_i_rad = std::acos(cos_theta);
     qreal gamma_mag = computeReflectionCoeff_Magnitude(0.0);
+    //qreal gamma_mag = computeReflectionCoeff_Magnitude(theta_i_rad);
 
     for (int i = 0; i < walls.length(); i++) {
         Obstacle* wall = walls[i];

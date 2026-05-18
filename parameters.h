@@ -42,9 +42,11 @@ constexpr qreal max_y = 8;
 constexpr qreal beta_0 = 2*M_PI*freq/c; // beta
 
 // TX and RX antennas are lossless lambda/2 dipoles
-constexpr qreal G_TX = 1.7; // transmitter antenna gain, 1.64 or 1.7 // TODO: ?
-constexpr qreal G_RX = 1.7; // same as TX
+constexpr qreal G_TX = 1.64; // transmitter antenna gain, 1.64 or 1.7
+constexpr qreal G_RX = 1.64; // same as TX
 constexpr qreal P_TX = 0.1; // transmitter power in Watts
 constexpr qreal P_TX_dBm = 20; // transmitter power in dBm
+const qreal effective_height = lambda/M_PI; // h_{e\perp} (because halfwave dipole in horizontal plane)
+constexpr qreal R_a = 73; // antenna resistance : 73 Ohm
 
 #endif //PARAMETERS_H

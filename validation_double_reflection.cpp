@@ -312,8 +312,13 @@ void testCase_DoubleReflection()
         qDebug() << "No valid double reflection found";
         return;
     }
+    // Calculate incidence angle using dot product of ray vector and wall normal
+    //QVector2D ray_dir = (reflection_point - _tx).normalized();
+    //qreal cos_theta = std::abs(QVector2D::dotProduct(ray_dir, wall->normal));
+    //qreal theta_i_rad = std::acos(cos_theta);
     
     qreal gamma_mag = computeReflectionCoeff_Magnitude_DR(0.0);
+    //qreal gamma_mag = computeReflectionCoeff_Magnitude_DR(theta_i_rad);
     qreal P_theoretical = computeTheoreticalPower_DoubleReflection(
         tx_pos, rx_pos, refl_1, refl_2, tx->power, tx->gain, rx->gain, gamma_mag, gamma_mag
     );

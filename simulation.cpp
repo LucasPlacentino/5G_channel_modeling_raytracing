@@ -267,6 +267,15 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX)
                 ray_2_reflection->distance = QVector2D(*_RX-_image_imageTX).length();
                 //qDebug() << "Ray's (2refl) total coeffs:" << ray_2_reflection->getTotalCoeffs();
                 _RX->all_rays.append(ray_2_reflection);
+
+                // TODO: FIXME: add third reflection
+                third_reflection:
+                QVector2D __imageTX = computeImage(__TX, wall_2);
+                //qDebug() << "__image:" << __imageTX.x() << __imageTX.y();
+                // 3rd reflection
+                for (Obstacle* wall_3 : this->obstacles) {
+                    
+                }
             }
         }
     }
