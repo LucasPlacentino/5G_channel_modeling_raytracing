@@ -160,7 +160,7 @@ void MainWindow::on_actionReset_triggered()
 void MainWindow::on_actionSee_Github_triggered()
 {
     // User clicked on the menu's "See Github" button
-    QDesktopServices::openUrl(QUrl("https://github.com/LucasPlacentino/802_11ay-Raytracing-Simulator", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://github.com/LucasPlacentino/5G_channel_modeling_raytracing/blob/main/validation_free_space.cpp", QUrl::TolerantMode));
 }
 
 
@@ -168,10 +168,10 @@ void MainWindow::on_actionAbout_triggered()
 {
     // User clicked on the menu's "About" button
     QMessageBox::about(this, tr("About this application"),
-                       tr("This <b>802.11ay Raytracing Simulator</b> was made as a "
-                          "project for the course <b>ELEC-H304</b> Telecommunications Physics "
-                          "at <b>École polytechnique de Bruxelles - ULB</b>."
-                          "<br>By Lucas Placentino & Salman Houdaibi"));
+                       tr("This <b>5G Channel Modeling Ray-Tracing Simulator</b> was made as a "
+                          "project for the course <b>ELEC-H415</b> Communication Channels "
+                          "at <b>École polytechnique de Bruxelles - ULB (BRUFACE Master program)</b>."
+                          "<br>By Lucas Placentino, 2026"));
 }
 
 void MainWindow::saveImage(QGraphicsView* view = simulation.view, bool isValidation = false)
@@ -389,6 +389,6 @@ void MainWindow::on_actionRun_Double_Reflection_Validation_triggered()
 
 void MainWindow::on_actionRun_Triple_Reflection_Valdiation_triggered()
 {
-    //Validation_view = runTripleReflectionValidation();
+    Validation_view = runTripleReflectionValidation();
 }
 
