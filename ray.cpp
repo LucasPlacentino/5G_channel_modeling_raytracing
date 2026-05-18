@@ -3,10 +3,11 @@
 #include <QPen>
 #include "parameters.h"
 
-Ray::Ray(QPointF start, QPointF end) {
+Ray::Ray(QPointF start, QPointF end, int tx_selector_index) {
     // Ray object constructor
     this->start=start;
     this->end=end;
+    this->tx_selector_index=tx_selector_index;
 }
 
 void Ray::addCoeff(complex<qreal> coeff) {

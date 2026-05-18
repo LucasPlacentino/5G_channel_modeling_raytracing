@@ -7,13 +7,15 @@
 #include <QFileDialog>
 #include <QDir>
 
+#include "parameters.h"
+
 #include "simulation.h"
 //#include "validation.h" // old_validation
 #include "validation_free_space.h"
 #include "validation_single_reflection.h"
 #include "validation_double_reflection.h"
 #include "validation_triple_reflection.h"
-#include "validation_recursive.h"
+//#include "validation_recursive.h"
 QGraphicsView* Validation_view;
 
 Simulation simulation = Simulation(); // The global simulation object, use `extern Simulation simulation;` in other files?
@@ -211,7 +213,7 @@ void MainWindow::on_actionSave_image_triggered()
 void MainWindow::initFirstBaseStation()
 {
     // Creates the first (non-deletable) Base Station
-    simulation.baseStations.append(new Transmitter(9.4,7, 0, "Base Station 1"));
+    simulation.baseStations.append(new Transmitter(initial_BS_x,initial_BS_y, 0, "Base Station 1"));
 }
 
 void MainWindow::showFirstBaseStation()

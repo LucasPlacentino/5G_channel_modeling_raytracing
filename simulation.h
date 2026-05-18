@@ -55,8 +55,8 @@ private:
     // --- new : ---
     void createWalls();
     QGraphicsScene* createGraphicsScene();
-    void computeReflections(Receiver* _RX, const QVector2D& _TX);
-    void computeDirect(Receiver* _RX, const QVector2D& _TX);
+    void computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_selector_index);
+    void computeDirect(Receiver* _RX, const QVector2D& _TX, int tx_selector_index);
     void addReflection(Ray* _ray, const QVector2D& _p1, const QVector2D& _p2, Obstacle* wall);
     complex<qreal> makeTransmission(RaySegment* ray_segment, Obstacle* wall);
     void checkTransmissions(Ray* _ray, QList<Obstacle*> _reflection_walls);

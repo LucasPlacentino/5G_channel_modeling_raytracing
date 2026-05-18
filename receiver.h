@@ -20,6 +20,9 @@ public:
     qreal Ra = 73; // antenna resistance
     QColor cell_color = QColor(Qt::transparent); // receiver cell color, based on power/bitrate
 
+    // Add this to your public variables in receiver.h
+    int connected_tx_selector_index = -1; // new
+
     QList<Ray*> all_rays; // list of all rays that go to this receiver
 
     qreal computeTotalPower(Transmitter* transmitter); // returns final total power computation for this RX

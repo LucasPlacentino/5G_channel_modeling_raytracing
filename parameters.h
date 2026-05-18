@@ -56,4 +56,7 @@ constexpr qreal P_TX_dBm = 20; // transmitter power in dBm
 static const qreal effective_height = lambda/M_PI; // h_{e\perp} (because halfwave dipole in horizontal plane)
 static constexpr qreal R_a = 73; // antenna resistance : 73 Ohm
 
+static constexpr qreal initial_BS_x = 9.4;
+static constexpr qreal initial_BS_y = 7;
+
 #endif //PARAMETERS_H

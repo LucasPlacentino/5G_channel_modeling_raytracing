@@ -11,7 +11,8 @@ using namespace std;
 class Ray
 {
 public:
-    Ray(QPointF start, QPointF end);
+    int tx_selector_index;
+    Ray(QPointF start, QPointF end, int tx_selector_index);
     QList<RaySegment*> segments; // list of this ray's segment(s)
     int num_reflections = 0;
     QPointF start; // ray's starting point (TX)

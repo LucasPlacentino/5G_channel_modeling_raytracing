@@ -136,8 +136,8 @@ void Simulation::run(QProgressBar* progress_bar)
         for (QList<Receiver*> cells_line : this->cells){
             // loops over each line
             for (Receiver* cell : cells_line) {
-                computeDirect(cell, *tx);
-                computeReflections(cell, *tx);
+                computeDirect(cell, *tx, tx->selector_index);
+                computeReflections(cell, *tx, tx->selector_index);
                 progress_bar->setValue(i/(cells_line.length()*this->cells.length()));
                 i++;
             }
@@ -155,7 +155,7 @@ void Simulation::run(QProgressBar* progress_bar)
 
 }
 
-void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX)
+void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_selector_index)
 {
     // 1st reflection :
     for (int i=0; i<this->obstacles.length(); i++) {
@@ -171,7 +171,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX)
             delete test_segment;
 
             if (valid_1st_reflection) {
-                Ray* ray_1_reflection = new Ray(_TX.toPointF(), _RX->toPointF());
+                Ray* ray_1_reflection = new Ray(_TX.toPointF(), _RX->toPointF(), tx_selector_index);
                 QList<RaySegment*> ray_segments;
                 ray_segments.append(new RaySegment(_TX.x(),_TX.y(),_P_r.x(),_P_r.y()));
                 ray_segments.append(new RaySegment(_P_r.x(),_P_r.y(),_RX->x(),_RX->y()));
@@ -205,7 +205,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX)
                     delete test_segment_2;
 
                     if (valid_2nd_reflection) {
-                        Ray* ray_2_reflection = new Ray(_TX.toPointF(),_RX->toPointF());
+                        Ray* ray_2_reflection = new Ray(_TX.toPointF(),_RX->toPointF(), tx_selector_index);
                         QList<RaySegment*> ray_segments_2;
                         ray_segments_2.append(new RaySegment(_TX.x(),_TX.y(),_P_r_2_first.x(),_P_r_2_first.y()));
                         ray_segments_2.append(new RaySegment(_P_r_2_first.x(),_P_r_2_first.y(),_P_r_2_last.x(),_P_r_2_last.y()));
@@ -247,7 +247,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX)
                             delete test_segment_3_3;
 
                             if (valid_3rd_reflection) {
-                                Ray* ray_3_reflection = new Ray(_TX.toPointF(), _RX->toPointF());
+                                Ray* ray_3_reflection = new Ray(_TX.toPointF(), _RX->toPointF(), tx_selector_index);
                                 QList<RaySegment*> ray_segments_3;
                                 ray_segments_3.append(new RaySegment(_TX.x(), _TX.y(), _P_r_3_first.x(), _P_r_3_first.y()));
                                 ray_segments_3.append(new RaySegment(_P_r_3_first.x(), _P_r_3_first.y(), _P_r_3_mid.x(), _P_r_3_mid.y()));
@@ -361,11 +361,11 @@ void Simulation::checkTransmissions(Ray* _ray, QList<Obstacle*> _reflection_wall
     }
 }
 
-void Simulation::computeDirect(Receiver* _RX, const QVector2D& _TX)
+void Simulation::computeDirect(Receiver* _RX, const QVector2D& _TX, int tx_selector_index)
 {
     // Computes the direct ray: checks all walls between RX and TX and adds
     // their computed transmission coefficients to the direct ray list of coeffs
-    Ray* direct_ray = new Ray(_TX.toPointF(), _RX->toPointF());
+    Ray* direct_ray = new Ray(_TX.toPointF(), _RX->toPointF(), tx_selector_index);
     RaySegment* _direct_line = new RaySegment(_RX->x(), _RX->y(), _TX.x(), _TX.y());
     for (Obstacle* wall : this->obstacles) {
         QPointF* intersection_point = nullptr; // not used
@@ -574,15 +574,20 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
         for (Receiver* RX : cells_line) {
             // compute total power and set it in RX
             qreal _rx_power = 0.0;
+            int _best_tx_id = -1;
+            
             for (Transmitter* tx : this->baseStations) {
                 qreal _pwr = RX->computeTotalPower(tx);
-                if (_pwr > _rx_power) {
-                    // cell has more power with this transmitter
+                
+                // If it's the first transmitter, or it has higher power, update the best TX
+                if (_best_tx_id == -1 || _pwr > _rx_power) {
                     _rx_power = _pwr;
+                    _best_tx_id = tx->selector_index; // <-- Using your attribute here
                 }
             }
 
             RX->power = _rx_power;
+            RX->connected_tx_selector_index = _best_tx_id; // Save the connected BS ID
 
             RX->updateBitrateAndColor();
             QBrush _rxBrush = RX->graphics->brush();
@@ -603,24 +608,26 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
                 qreal bitrate_Gbps = bitrate_Mbps/1000;
                 RX->graphics->setToolTip(
                     //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
-                    QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps").arg(
+                    QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nConnected BS: %6").arg(
                         QString::number(RX->x()),
                         QString::number(RX->y()),
                         QString::number(_rx_power*1000),
                         QString::number(_rx_power_dBm,'f',2),
-                        QString::number(bitrate_Gbps,'f',2)
+                        QString::number(bitrate_Gbps,'f',2),
+                        QString::number(RX->connected_tx_selector_index)
                         ////QString::number(RX->all_rays.first()->coeffsList.length()),
                         ////QString::number(RX->all_rays.first()->segments.length())
                         ));
             } else {
                 RX->graphics->setToolTip(
                     //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
-                    QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps").arg(
+                    QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps\nConnected BS: %6").arg(
                         QString::number(RX->x()),
                         QString::number(RX->y()),
                         QString::number(_rx_power*1000),
                         QString::number(_rx_power_dBm,'f',2),
-                        QString::number(bitrate_Mbps)
+                        QString::number(bitrate_Mbps),
+                        QString::number(RX->connected_tx_selector_index)
                         //QString::number(RX->all_rays.first()->coeffsList.length()),
                         //QString::number(RX->all_rays.first()->segments.length())
                         ));
@@ -732,18 +739,43 @@ void Simulation::addLegend(QGraphicsScene* scene)
 
         // text for minimum of gradient
         //QGraphicsTextItem* min_text = new QGraphicsTextItem("-90dBm");
-        QGraphicsTextItem* min_text = new QGraphicsTextItem("50Mbps");
+        QGraphicsTextItem* min_text = new QGraphicsTextItem(QString::number(min_bitrate_Mbps)+"Mbps");
         min_text->setPos(rect.bottomLeft().x()-6,rect.bottomLeft().y()+1);
         min_text->setDefaultTextColor(Qt::white);
         min_text->setScale(0.25);
+
+        // text for quarter point (177.8 Mbps)
+        qreal quarter_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.25*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
+        QGraphicsTextItem* quarter_text = new QGraphicsTextItem(QString::number(quarter_bitrate_Mbps, 'f', 1)+"Mbps");
+        quarter_text->setPos(rect.bottomLeft().x()+0.25*rect_width-6,rect.bottomLeft().y()+1);
+        quarter_text->setDefaultTextColor(Qt::white);
+        quarter_text->setScale(0.25);
+
+        // text for middle point (316.2 Mbps)
+        qreal middle_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.5*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
+        QGraphicsTextItem* middle_text = new QGraphicsTextItem(QString::number(middle_bitrate_Mbps, 'f', 1)+"Mbps");
+        middle_text->setPos(rect.bottomLeft().x()+0.5*rect_width-6,rect.bottomLeft().y()+1);
+        middle_text->setDefaultTextColor(Qt::white);
+        middle_text->setScale(0.25);
+
+        // text for three-quarters point (562.3 Mbps)
+        qreal three_quarters_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.75*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
+        QGraphicsTextItem* three_quarters_text = new QGraphicsTextItem(QString::number(three_quarters_bitrate_Mbps, 'f', 1)+"Mbps");
+        three_quarters_text->setPos(rect.bottomLeft().x()+0.75*rect_width-6,rect.bottomLeft().y()+1);
+        three_quarters_text->setDefaultTextColor(Qt::white);
+        three_quarters_text->setScale(0.25);
+
         // text for maximum of gradient
         //QGraphicsTextItem* max_text = new QGraphicsTextItem("-40dBm");
-        QGraphicsTextItem* max_text = new QGraphicsTextItem("40Gbps");
+        QGraphicsTextItem* max_text = new QGraphicsTextItem(QString::number(max_bitrate_Mbps/1000)+"Gbps");
         max_text->setPos(rect.bottomRight().x()-6,rect.bottomRight().y()+1);
         max_text->setDefaultTextColor(Qt::white);
         max_text->setScale(0.25);
 
         scene->addItem(min_text);
+        scene->addItem(quarter_text);
+        scene->addItem(middle_text);
+        scene->addItem(three_quarters_text);
         scene->addItem(max_text);
     } else {
         QGraphicsTextItem* ray_colors = new QGraphicsTextItem("Green line: Direct ray\nRed line: One-reflection ray\nYellow line: Two-reflections ray\nCyan line: Three-reflections ray");

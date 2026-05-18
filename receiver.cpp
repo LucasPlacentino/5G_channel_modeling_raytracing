@@ -117,33 +117,29 @@ QColor Receiver::computeColor(qreal value)
 
 
 qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final total power computation for this RX
+
 {
-    // qreal res = 0;
-    // for (Ray* ray : this->all_rays) {
-    //     res+=ray->getTotalCoeffs(); // sum of all the rays' total coefficients and exp term, returns |G*G*T|^2 *|exp|^2
-    // }
-    // //qDebug() << "computeTotalPower res+=ray->getTotalCoeffs" << res;
-    // // multiply by the term before the sum:
-    // res *= (60*pow(lambda,2))/(8*pow(M_PI,2)*Ra)*transmitter->gain*transmitter->power;
-
-    // if (res != res) {
-    //     qDebug() << "computeTotalPower: NaN !!!";
-    // }
-
-    // //qDebug() << "computeTotalPower:" << res;
-    // return res;
-
     // Initial E-field amplitude at 1m
+    // for THIS transmitter
     qreal E0 = sqrt(60.0 * transmitter->gain * transmitter->power);
 
     complex<qreal> E_tot(0, 0);
 
+    // Get the coordinates of this specific transmitter
+    QPointF tx_pos(transmitter->x(), transmitter->y());
+
     for (Ray* ray : this->all_rays) {
+
+        // FILTER: Only add E-fields of rays that belong to THIS transmitter.
+        if (ray->tx_selector_index != transmitter->selector_index) {
+            continue; 
+        }
+
         complex<qreal> ray_coeff(1, 0);
         for (complex<qreal> coeff : ray->coeffsList) {
             ray_coeff *= coeff; // Product of all Gamma_m and T_m for this ray
         }
-        
+
         qreal d = ray->getTotalDistance();
         // Coherent addition: E_n = E0 * (Coeffs) * exp(-j*beta*d) / d
         complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
@@ -151,12 +147,12 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
     }
 
     qreal h_e = lambda / M_PI; // Effective height for lambda/2 dipole
-    
+
     // P_RX = (1 / 8*Ra) * |h_e * E_tot|^2
     qreal res = (1.0 / (8.0 * Ra)) * pow(abs(h_e * E_tot), 2);
 
     if (res != res) qDebug() << "computeTotalPower: NaN !!!";
-    
+
     return res;
 }
 
