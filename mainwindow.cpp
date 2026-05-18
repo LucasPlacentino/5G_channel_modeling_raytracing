@@ -396,6 +396,6 @@ void MainWindow::on_actionRun_Triple_Reflection_Validation_triggered()
 
 void MainWindow::on_actionRun_Recursive_Validation_triggered()
 {
-    Validation_view = runRecursiveValidation();
+    //Validation_view = runRecursiveValidation();
 }
 

@@ -51,7 +51,7 @@ Obstacle::Obstacle(QVector2D start, QVector2D end, ObstacleType material, qreal 
     pen.setColor(Qt::lightGray);
     pen.setWidth(10*0.2);
     this->properties.relative_permittivity = epsilon_r; // in parameters.h
-    this->properties.conductivity = 0; // TODO: FIXME: value ?
+    this->properties.conductivity = sigma_cond; // in parameters.h
 
     // switch (this->material) {
     // case GenericWall:

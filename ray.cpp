@@ -60,9 +60,13 @@ QList<QGraphicsLineItem*> Ray::getSegmentsGraphics(){
         //qDebug() << "This ray has 1 reflection";
         ray_pen.setColor(Qt::red);
         break;
-    case 2: // 2 reflection
+    case 2: // 2 reflections
         //qDebug() << "This ray has 2 reflections";
         ray_pen.setColor(Qt::yellow);
+        break;
+    case 3: // 3 reflections
+        //qDebug() << "This ray has 3 reflections";
+        ray_pen.setColor(Qt::cyan);
         break;
     }
     QList<QGraphicsLineItem*> ray_graphics;
