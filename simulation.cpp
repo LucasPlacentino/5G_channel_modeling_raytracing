@@ -269,13 +269,13 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX)
                 _RX->all_rays.append(ray_2_reflection);
 
                 // TODO: FIXME: add third reflection
-                third_reflection:
-                QVector2D __imageTX = computeImage(__TX, wall_2);
-                //qDebug() << "__image:" << __imageTX.x() << __imageTX.y();
-                // 3rd reflection
-                for (Obstacle* wall_3 : this->obstacles) {
-                    
-                }
+                //third_reflection:
+                //QVector2D __imageTX = computeImage(__TX, wall_2);
+                ////qDebug() << "__image:" << __imageTX.x() << __imageTX.y();
+                //// 3rd reflection
+                //for (Obstacle* wall_3 : this->obstacles) {
+                //
+                //}
             }
         }
     }
@@ -388,47 +388,79 @@ void Simulation::computeDirect(Receiver* _RX, const QVector2D& _TX)
     _RX->all_rays.append(direct_ray);
 }
 
-complex<qreal> Simulation::computePerpendicularGamma(qreal _cos_theta_i, qreal _cos_theta_t, Obstacle* wall)
-{
-    // returns Gamma_perpendicular
-    complex<qreal> left = wall->properties.Z_m * _cos_theta_i;
-    //qDebug() << "left perpGamma:" << left.real() << "+j" << left.imag();
-    complex<qreal> right = Z_0 * _cos_theta_t;
-    //qDebug() << "right perpGamma:" << right.real() << "+j" << right.imag();
-    //complex<qreal> Gamma_perp = (wall->properties.Z_m*_cos_theta_i-Z_0*_cos_theta_t)/(wall->properties.Z_m*_cos_theta_i+Z_0*_cos_theta_t);
-    complex<qreal> Gamma_perp = (left - right) / (left + right);
+// complex<qreal> Simulation::computePerpendicularGamma(qreal _cos_theta_i, qreal _cos_theta_t, Obstacle* wall)
+// {
+//     // returns Gamma_perpendicular
+//     complex<qreal> left = wall->properties.Z_m * _cos_theta_i;
+//     //qDebug() << "left perpGamma:" << left.real() << "+j" << left.imag();
+//     complex<qreal> right = Z_0 * _cos_theta_t;
+//     //qDebug() << "right perpGamma:" << right.real() << "+j" << right.imag();
+//     //complex<qreal> Gamma_perp = (wall->properties.Z_m*_cos_theta_i-Z_0*_cos_theta_t)/(wall->properties.Z_m*_cos_theta_i+Z_0*_cos_theta_t);
+//     complex<qreal> Gamma_perp = (left - right) / (left + right);
 
-    //qDebug() << "Gamma_perp=" << QString::number(Gamma_perp.real()) << "+j" << QString::number(Gamma_perp.imag());
-    return Gamma_perp;
-}
+//     //qDebug() << "Gamma_perp=" << QString::number(Gamma_perp.real()) << "+j" << QString::number(Gamma_perp.imag());
+//     return Gamma_perp;
+// }
 
 complex<qreal> Simulation::computeReflectionCoeff(qreal _cos_theta_i, qreal _sin_theta_i, qreal _cos_theta_t, qreal _sin_theta_t, Obstacle* wall)
 {
     // returns the reflection coefficient Gamma_m
-    qreal s = wall->thickness/_cos_theta_t;
-    complex<qreal> Gamma_perpendicular = computePerpendicularGamma(_cos_theta_i, _cos_theta_t, wall);
-    complex<qreal> reflection_term = exp(-2.0 * wall->properties.gamma_m * s) * exp(j * 2.0 * beta_0 * s * _sin_theta_t * _sin_theta_i);
-    //qDebug() << "reflection_term:" << QString::number(reflection_term.real()) << "+ j" << QString::number(reflection_term.imag());
-    complex<qreal> Gamma_m = Gamma_perpendicular - (1.0 - pow((Gamma_perpendicular), 2)) * (Gamma_perpendicular * reflection_term) / (1.0 - pow((Gamma_perpendicular), 2) * reflection_term);
-    //qDebug() << "Gamma_m:" << QString::number(Gamma_m.real()) << "+ j" << QString::number(Gamma_m.imag());
 
-    return Gamma_m;
+    // qreal s = wall->thickness/_cos_theta_t;
+    // complex<qreal> Gamma_perpendicular = computePerpendicularGamma(_cos_theta_i, _cos_theta_t, wall);
+    // complex<qreal> reflection_term = exp(-2.0 * wall->properties.gamma_m * s) * exp(j * 2.0 * beta_0 * s * _sin_theta_t * _sin_theta_i);
+    // //qDebug() << "reflection_term:" << QString::number(reflection_term.real()) << "+ j" << QString::number(reflection_term.imag());
+    // complex<qreal> Gamma_m = Gamma_perpendicular - (1.0 - pow((Gamma_perpendicular), 2)) * (Gamma_perpendicular * reflection_term) / (1.0 - pow((Gamma_perpendicular), 2) * reflection_term);
+    // //qDebug() << "Gamma_m:" << QString::number(Gamma_m.real()) << "+ j" << QString::number(Gamma_m.imag());
+
+    // return Gamma_m;
+
+    // Assume walls are dielectric slabs (depends on the Fresnel reflection coefficient of the interface and the slab's thickness and material properties):
+    qreal eps_r = wall->properties.relative_permittivity;
+    
+    // Normal polarization Fresnel reflection (Gamma_perp)
+    complex<qreal> Gamma_perp = (_cos_theta_i - sqrt(eps_r - pow(_sin_theta_i, 2))) /
+                                (_cos_theta_i + sqrt(eps_r - pow(_sin_theta_i, 2)));
+
+    // Phase thickness (q)
+    qreal q = beta_0 * wall->thickness * sqrt(eps_r - pow(_sin_theta_i, 2));
+
+    // Slab reflection (Gamma_m)
+    complex<qreal> num = Gamma_perp * (1.0 - exp(-2.0 * j * q));
+    complex<qreal> den = 1.0 - pow(Gamma_perp, 2) * exp(-2.0 * j * q);
+    return num / den;
 }
 
 complex<qreal> Simulation::computeTransmissionCoeff(qreal _cos_theta_i, qreal _sin_theta_i, qreal _cos_theta_t, qreal _sin_theta_t, Obstacle* wall)
 {
     // returns the transmission coefficient T_m
-    //qDebug() << "_cos_theta_i" << _cos_theta_i;
-    //qDebug() << "_sin_theta_i" << _sin_theta_i;
-    //qDebug() << "_sin_theta_t" << _sin_theta_t;
-    //qDebug() << "_cos_theta_t" << _cos_theta_t;
-    qreal s = wall->thickness/_cos_theta_t;
-    //qDebug() << "s" << s;
-    complex<qreal> perpGamma = computePerpendicularGamma(_cos_theta_i, _cos_theta_t, wall);
-    //qDebug() << "perpGamma" << perpGamma.real() << "+j" << perpGamma.imag();
-    complex<qreal> T_m = ((1.0-pow(perpGamma,2))*exp(-(wall->properties.gamma_m)*s))/(1.0-(pow(perpGamma,2)*exp(-2.0*(wall->properties.gamma_m)*s)*exp(j*beta_0*2.0*s*_sin_theta_t*_sin_theta_i)));
-    //qDebug() << "TransmissionCoeff=" << QString::number(T_m.real()) << "+j" << QString::number(T_m.imag());
-    return T_m;
+
+    // //qDebug() << "_cos_theta_i" << _cos_theta_i;
+    // //qDebug() << "_sin_theta_i" << _sin_theta_i;
+    // //qDebug() << "_sin_theta_t" << _sin_theta_t;
+    // //qDebug() << "_cos_theta_t" << _cos_theta_t;
+    // qreal s = wall->thickness/_cos_theta_t;
+    // //qDebug() << "s" << s;
+    // complex<qreal> perpGamma = computePerpendicularGamma(_cos_theta_i, _cos_theta_t, wall);
+    // //qDebug() << "perpGamma" << perpGamma.real() << "+j" << perpGamma.imag();
+    // complex<qreal> T_m = ((1.0-pow(perpGamma,2))*exp(-(wall->properties.gamma_m)*s))/(1.0-(pow(perpGamma,2)*exp(-2.0*(wall->properties.gamma_m)*s)*exp(j*beta_0*2.0*s*_sin_theta_t*_sin_theta_i)));
+    // //qDebug() << "TransmissionCoeff=" << QString::number(T_m.real()) << "+j" << QString::number(T_m.imag());
+    // return T_m;
+
+    // Assume walls are dielectric slabs (depends on the Fresnel reflection coefficient of the interface and the slab's thickness and material properties):
+    qreal eps_r = wall->properties.relative_permittivity;
+    
+    // Normal polarization Fresnel reflection (Gamma_perp)
+    complex<qreal> Gamma_perp = (_cos_theta_i - sqrt(eps_r - pow(_sin_theta_i, 2))) /
+                                (_cos_theta_i + sqrt(eps_r - pow(_sin_theta_i, 2)));
+
+    // Phase thickness (q)
+    qreal q = beta_0 * wall->thickness * sqrt(eps_r - pow(_sin_theta_i, 2));
+
+    // Slab transmission (T_m)
+    complex<qreal> num = (1.0 - pow(Gamma_perp, 2)) * exp(-j * q);
+    complex<qreal> den = 1.0 - pow(Gamma_perp, 2) * exp(-2.0 * j * q);
+    return num / den;
 }
 
 bool Simulation::checkSameSideOfWall(const QVector2D& _normal, const QVector2D& _TX, const QVector2D& _RX) {

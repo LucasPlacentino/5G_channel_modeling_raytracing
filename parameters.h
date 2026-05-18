@@ -24,6 +24,7 @@ constexpr qreal lambda = wavelength;
 const qreal Z_0 = sqrt(mu_0 / epsilon_0); // vacuum impedance
 
 constexpr qreal epsilon_r = 4; // relative permittivity of ALL materials
+constexpr qreal sigma_cond = 0; // lossless material (to use dielectric slab model for walls)
 
 // TODO: impl
 constexpr qreal min_sensitivity_dBm = -80; // minimum sensitivity in dBm (communication impossible)
