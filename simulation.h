@@ -60,7 +60,7 @@ private:
     void addReflection(Ray* _ray, const QVector2D& _p1, const QVector2D& _p2, Obstacle* wall);
     complex<qreal> makeTransmission(RaySegment* ray_segment, Obstacle* wall);
     void checkTransmissions(Ray* _ray, QList<Obstacle*> _reflection_walls);
-    complex<qreal> computePerpendicularGamma(qreal _cos_theta_i, qreal _cos_theta_t, Obstacle* wall);
+    //complex<qreal> computePerpendicularGamma(qreal _cos_theta_i, qreal _cos_theta_t, Obstacle* wall);
     complex<qreal> computeReflectionCoeff(qreal _cos_theta_i, qreal _sin_theta_i, qreal _cos_theta_t, qreal _sin_theta_t, Obstacle* wall);
     complex<qreal> computeTransmissionCoeff(qreal _cos_theta_i, qreal _sin_theta_i, qreal _cos_theta_t, qreal _sin_theta_t, Obstacle* wall);
     bool checkSameSideOfWall(const QVector2D& _normal, const QVector2D& _TX, const QVector2D& _RX);

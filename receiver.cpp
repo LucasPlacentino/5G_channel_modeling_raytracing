@@ -9,10 +9,12 @@
      -80 dBm | 100 Mb/s (lower: comms impossible)
      -60 dBm | 1 Gb/s  (higher: data rate capped)
 */
-static constexpr qreal max_power_dBm = -60.0;
-static constexpr qreal min_power_dBm = -80.0;
-static constexpr qreal max_bitrate_Mbps = 1000;
-static constexpr qreal min_bitrate_Mbps = 100;
+
+// Conversion to bitrate (beware log scale)
+static const qreal max_sensitivity_mW = std::pow(10.0, max_sensitivity_dBm / 10.0);
+static const qreal min_sensitivity_mW = std::pow(10.0, min_sensitivity_dBm / 10.0);
+static const qreal max_bitrate_dB = 10*log10(max_bitrate_Mbps);
+static const qreal min_bitrate_dB = 10*log10(min_bitrate_Mbps);
 
 Receiver::Receiver(qreal x, qreal y, qreal resolution, bool showOutline) {
     // Receiver object constructor
@@ -42,24 +44,22 @@ void Receiver::updateBitrateAndColor()
         bitrate = 9999999999999999.9;
         this->cell_color = QColor::fromRgb(255,192,203); // pink
         qDebug() << "--- ! ERROR: Cell has NaN power ! ---";
-    } else if (power_dBm > max_power_dBm) {
+    } else if (power_dBm > max_sensitivity_dBm) {
         bitrate = max_bitrate_Mbps; //in Mbps, 40 Gbps max from -40 dBm
         this->cell_color = QColor::fromRgb(255,0,0); // red
-    } else if (power_dBm < min_power_dBm) { // 50 Mbps at -90 dBm
+    } else if (power_dBm < min_sensitivity_dBm) { // 50 Mbps at -90 dBm
         bitrate = 0; //in Mbps, no connection (0 Mbps)
         this->cell_color = Qt::black; // Qt::transparent or Qt::black or Qt::darkBlue ?
     } else {
-        // Conversion to bitrate (beware log scale)
-        qreal max_power_mW = std::pow(10.0, max_power_dBm / 10.0);
-        qreal min_power_mW = std::pow(10.0, min_power_dBm / 10.0);
 
         //bitrate = min_bitrate_Mbps + (((this->power - min_power_mW/1000) / (max_power_mW/1000 - min_power_mW/1000)) * (max_bitrate_Mbps - min_bitrate_Mbps));
         // OR ?
-        qreal max_bitrate_dB = 10*log10(max_bitrate_Mbps);
-        qreal min_bitrate_dB = 10*log10(min_bitrate_Mbps);
-        qreal bitrate_dB = min_bitrate_dB + (((power_dBm - min_power_dBm) / (max_power_dBm - min_power_dBm)) * (max_bitrate_dB - min_bitrate_dB));
+        //global max_bitrate_dB etc above
+
+
+        qreal bitrate_dB = min_bitrate_dB + (((power_dBm - min_sensitivity_dBm) / (max_sensitivity_dBm - min_sensitivity_dBm)) * (max_bitrate_dB - min_bitrate_dB));
         //qDebug() << "bitrate dB:" << bitrate_dB;
-        bitrate = pow(10.0, bitrate_dB / 10.0);
+        bitrate = pow(10.0, bitrate_dB / 10.0); // back to linear
         //qDebug() << "bitrate (Mbps):" << bitrate;
 
         //qreal value_normalized = (power_dBm - min_power_dBm) / (max_power_dBm - min_power_dBm);

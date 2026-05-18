@@ -396,6 +396,7 @@ void MainWindow::on_actionRun_Triple_Reflection_Validation_triggered()
 
 void MainWindow::on_actionRun_Recursive_Validation_triggered()
 {
+    qDebug() << "not implemented";
     //Validation_view = runRecursiveValidation();
 }
 
