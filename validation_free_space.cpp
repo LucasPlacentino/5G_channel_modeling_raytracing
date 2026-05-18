@@ -10,6 +10,7 @@
 #include "transmitter.h"
 #include "receiver.h"
 #include "obstacle.h"
+#include "validation_common.h"
 #include <QGraphicsScene>
 #include <QGraphicsView>
 #include <QGraphicsLineItem>
@@ -22,18 +23,7 @@
 /**
  * @file validation_free_space.cpp
  * @brief Validates the free-space propagation model (direct path only, no obstacles)
- * 
- * This validation test compares simulated received power against theoretical
- * free-space path loss computed using the Friis transmission equation:
- * 
- * P_RX = P_TX * G_TX * G_RX * (lambda / (4*pi*d))^2
  */
-
-// ============================================================================
-// GLOBAL GRAPHICS OBJECTS
-// ============================================================================
-
-QGraphicsScene* validation_scene = nullptr;
 
 // ============================================================================
 // THEORETICAL CALCULATIONS
@@ -41,11 +31,6 @@ QGraphicsScene* validation_scene = nullptr;
 
 /**
  * Compute theoretical free-space received power using Friis transmission equation
- * @param distance_m Distance in meters between TX and RX
- * @param tx_power_W Transmitter power in Watts
- * @param tx_gain Transmitter antenna gain (linear)
- * @param rx_gain Receiver antenna gain (linear)
- * @return Received power in Watts
  */
 qreal computeTheoreticalPower_FriisEquation(qreal distance_m, qreal tx_power_W, 
                                              qreal tx_gain, qreal rx_gain)
@@ -57,23 +42,11 @@ qreal computeTheoreticalPower_FriisEquation(qreal distance_m, qreal tx_power_W,
 
 /**
  * Compute theoretical path loss in dB
- * @param distance_m Distance in meters
- * @return Path loss in dB (positive value)
  */
 qreal computePathLoss_dB(qreal distance_m)
 {
-    // PL(dB) = 20*log10(4*pi*d/lambda)
     qreal PL = 20.0 * std::log10((4.0 * M_PI * distance_m) / lambda);
     return PL;
-}
-
-/**
- * Convert linear power to dBm
- */
-qreal powerW_to_dBm(qreal power_W)
-{
-    if (power_W <= 0) return -999.0;
-    return 10.0 * std::log10(power_W * 1000.0);
 }
 
 /**
@@ -90,25 +63,14 @@ qreal powerdBm_to_W(qreal power_dBm)
 
 /**
  * Compute received power for a single direct ray
- * Uses the formula: P_RX = |H(f)|^2 * P_TX
- * where |H(f)|^2 includes path loss and antenna gains
  */
 qreal computeSimulatedDirectRayPower(Transmitter* transmitter, Receiver* receiver)
 {
-    // Extract positions from objects
     QVector2D tx_pos(transmitter->x(), transmitter->y());
     QVector2D rx_pos(receiver->x(), receiver->y());
     
-    // Distance
     qreal d = (rx_pos - tx_pos).length();
-    
-    // Free-space path loss: (lambda / (4*pi*d))^2
     qreal path_loss_linear = std::pow(lambda / (4.0 * M_PI * d), 2.0);
-    
-    // Both TX and RX are identical λ/2 dipoles with gain G_TX
-    // qreal P_RX = (60.0 * lambda * lambda) / (8.0 * M_PI * M_PI * receiver->Ra) 
-    //              * transmitter->gain * transmitter->gain
-    //              * transmitter->power * path_loss_linear;
     qreal P_RX = transmitter->power * transmitter->gain * receiver->gain * path_loss_linear;
     
     return P_RX;
@@ -121,73 +83,26 @@ qreal computeSimulatedDirectRayPower(Transmitter* transmitter, Receiver* receive
 /**
  * Create graphics scene with two perpendicular walls
  */
-QGraphicsScene* createGraphicsSceneWithWalls()
+QGraphicsScene* createGraphicsSceneWithWallsFS()
 {
     QGraphicsScene* scene = new QGraphicsScene();
-    scene->setSceneRect(0, 0, 200, 200);
+    scene->setSceneRect(-scene_offset, -scene_offset, 1000 + scene_offset*2, 700 + scene_offset*2);
+    QBrush bgBrush(Qt::black);
+    scene->setBackgroundBrush(bgBrush);
 
-    // Create and add two perpendicular walls
-    // Wall 1: Horizontal wall
-    Obstacle* wall1 = new Obstacle(QVector2D(0, 0), QVector2D(16, 0), GenericWall, 0.4);
+    Obstacle* wall1 = new Obstacle(QVector2D(0, 0), QVector2D(50, 0), GenericWall, 0.4);
     scene->addItem(wall1->graphics);
     qDebug() << "Wall 1 created (horizontal)";
 
-    // Wall 2: Vertical wall
-    Obstacle* wall2 = new Obstacle(QVector2D(0, 0), QVector2D(0, 12), GenericWall, 0.4);
+    Obstacle* wall2 = new Obstacle(QVector2D(0, 0), QVector2D(0, 70), GenericWall, 0.4);
     scene->addItem(wall2->graphics);
     qDebug() << "Wall 2 created (vertical)";
 
+    Obstacle* wall3 = new Obstacle(QVector2D(50,0), QVector2D(100,20), GenericWall, 0.4);
+    scene->addItem(wall3->graphics);
+    qDebug() << "Wall 3 created (slanted)";
+
     return scene;
-}
-
-/**
- * Draw transmitter to scene
- */
-void addTransmitterToScene(QGraphicsScene* scene, Transmitter* transmitter)
-{
-    if (!scene || !transmitter) return;
-    
-    transmitter->graphics->setRect(
-        10 * transmitter->x() - 5, 
-        10 * transmitter->y() - 5, 
-        10, 10
-    );
-    QPen tx_pen(Qt::darkGreen);
-    tx_pen.setWidthF(2);
-    transmitter->graphics->setPen(tx_pen);
-    transmitter->graphics->setBrush(QBrush(Qt::green));
-    transmitter->graphics->setToolTip(
-        QString("Transmitter (%1, %2) - %3 dBm")
-            .arg(transmitter->x())
-            .arg(transmitter->y())
-            .arg(transmitter->getPower_dBm())
-    );
-    scene->addItem(transmitter->graphics);
-}
-
-/**
- * Add receiver graphics to scene
- */
-void addReceiverToScene(QGraphicsScene* scene, Receiver* receiver)
-{
-    if (!scene || !receiver) return;
-    
-    receiver->graphics->setRect(
-        10 * receiver->x() - 5, 
-        10 * receiver->y() - 5, 
-        10, 10
-    );
-    QPen rx_pen(Qt::darkBlue);
-    rx_pen.setWidthF(2);
-    receiver->graphics->setPen(rx_pen);
-    receiver->graphics->setBrush(QBrush(Qt::blue));
-    receiver->graphics->setToolTip(
-        QString("Receiver (%1, %2) - Power: %3 W")
-            .arg(receiver->x())
-            .arg(receiver->y())
-            .arg(receiver->power)
-    );
-    scene->addItem(receiver->graphics);
 }
 
 /**
@@ -209,37 +124,19 @@ void drawDirectRay(QGraphicsScene* scene, Transmitter* transmitter, Receiver* re
     ray_graphics->setToolTip("Direct Ray Path");
 }
 
-/**
- * Create and display visualization window
- */
-void displayVisualization(QGraphicsScene* scene)
-{
-    if (!scene) return;
-
-    QGraphicsView* view = new QGraphicsView(scene);
-    view->setWindowTitle("Free-Space Validation - Ray Visualization");
-    view->setGeometry(100, 100, 800, 800);
-    view->show();
-}
-
-
 // ============================================================================
 // VALIDATION TEST CASE
 // ============================================================================
 
-/**
- * Test
- */
 void testCase()
 {
     qDebug() << "\n========== TEST CASE ==========";
 
-    qreal tx_power = 0.1; // 100 mW = 20 dBm
+    qreal tx_power = 0.1;
     qreal tx_gain = G_TX;
     qreal rx_gain = G_TX;
     qreal antenna_R = 73.0;
 
-    // Create TX and RX objects
     Transmitter* tx = new Transmitter(10.0, 5.2, 0, "TX_Test");
     Receiver* rx = new Receiver(6.8, 13.3, 0.5, false);
 
@@ -248,25 +145,19 @@ void testCase()
 
     qreal distance = std::sqrt(std::pow(rx_coord.x() - tx_coord.x(), 2) + std::pow(rx_coord.y() - tx_coord.y(), 2));
 
-    // Set TX/RX parameters
     tx->power = tx_power;
     tx->gain = tx_gain;
     rx->Ra = antenna_R;
     rx->gain = G_RX;
 
-    // Theoretical
-    qreal P_theoretical = computeTheoreticalPower_FriisEquation(
-        distance, tx->power, tx->gain, rx->gain
-    );
+    qreal P_theoretical = computeTheoreticalPower_FriisEquation(distance, tx->power, tx->gain, rx->gain);
     qreal PL_dB = computePathLoss_dB(distance);
     qreal P_theoretical_dBm = powerW_to_dBm(P_theoretical);
     
-    // Simulated
     qreal P_simulated = computeSimulatedDirectRayPower(tx, rx);
     rx->power = P_simulated;
     qreal P_simulated_dBm = powerW_to_dBm(P_simulated);
     
-    // Error
     qreal error_percent = std::abs(P_simulated - P_theoretical) / P_theoretical * 100.0;
     
     qDebug() << "TX Position:" << tx->x() << "," << tx->y();
@@ -286,7 +177,6 @@ void testCase()
         qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
     }
 
-    // Add to scene
     if (validation_scene) {
         addTransmitterToScene(validation_scene, tx);
         addReceiverToScene(validation_scene, rx);
@@ -294,15 +184,11 @@ void testCase()
     }
 }
 
-
 // ============================================================================
 // MAIN VALIDATION RUNNER
 // ============================================================================
 
-/**
- * Run all free-space validation tests
- */
-void runFreeSpaceValidation()
+QGraphicsView* runFreeSpaceValidation()
 {
     qDebug() << "\n\n";
     qDebug() << "╔════════════════════════════════════════════════════════════╗";
@@ -317,20 +203,16 @@ void runFreeSpaceValidation()
     qDebug() << "  Antenna Resistance:" << 73.0 << "Ohm";
     qDebug() << "  Vacuum Impedance (Z0):" << Z_0 << "Ohm";
     
-    // Create graphics scene with two perpendicular walls
-    validation_scene = createGraphicsSceneWithWalls();
+    validation_scene = createGraphicsSceneWithWallsFS();
     qDebug() << "\nGraphics scene created with 2 perpendicular obstacle walls";
     
-
-    // Run test
     testCase();
     
     qDebug() << "\n════════════════════════════════════════════════════════════";
     qDebug() << "FREE-SPACE VALIDATION COMPLETE\n";
 
-    // Display visualization
     qDebug() << "\nDisplaying visualization window...";
-    displayVisualization(validation_scene);
+    QGraphicsView* view = displayVisualization(validation_scene);
 
-    // ! memory leak if app is not restarted (close between each simulation run): RX and TX, Walls, scene, and view never freed
+    return view;
 }

@@ -4,10 +4,15 @@
 #include <QPen>
 #include "parameters.h"
 
-static constexpr qreal max_power_dBm = -40.0;
-static constexpr qreal min_power_dBm = -90.0;
-static constexpr qreal max_bitrate_Mbps = 40000;
-static constexpr qreal min_bitrate_Mbps = 50;
+/*
+ Sensitivity | Bit rate
+     -80 dBm | 100 Mb/s (lower: comms impossible)
+     -60 dBm | 1 Gb/s  (higher: data rate capped)
+*/
+static constexpr qreal max_power_dBm = -60.0;
+static constexpr qreal min_power_dBm = -80.0;
+static constexpr qreal max_bitrate_Mbps = 1000;
+static constexpr qreal min_bitrate_Mbps = 100;
 
 Receiver::Receiver(qreal x, qreal y, qreal resolution, bool showOutline) {
     // Receiver object constructor

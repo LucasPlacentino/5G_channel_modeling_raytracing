@@ -5,7 +5,7 @@
 #include <QGraphicsView>
 
 
-//QGraphicsView* runFreeSpaceValidation();
-void runFreeSpaceValidation();
+QGraphicsView* runFreeSpaceValidation();
+//void runFreeSpaceValidation();
 
 #endif // VALIDATION_FREE_SPACE_H

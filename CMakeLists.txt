@@ -25,6 +25,10 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         #validation.h validation.cpp
         validation_free_space.h validation_free_space.cpp
+        validation_single_reflection.h validation_single_reflection.cpp
+        validation_double_reflection.h validation_double_reflection.cpp
+        validation_triple_reflection.h validation_triple_reflection.cpp
+        validation_common.h validation_common.cpp
         simulation.h simulation.cpp
         ray.h ray.cpp
         obstacle.h obstacle.cpp
@@ -33,9 +37,6 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         parameters.h
         raysegment.h raysegment.cpp
         resources.qrc
-        validation_single_reflection.h validation_single_reflection.cpp
-        validation_double_reflection.h validation_double_reflection.cpp
-        validation_triple_reflection.h validation_triple_reflection.cpp
         #algorithme.h algorithme.cpp
 
 

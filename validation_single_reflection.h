@@ -4,7 +4,7 @@
 // TODO:
 #include <QGraphicsView>
 
-
-QGraphicsView* runSingleReflectionValidation();
+QGraphicsView* runSingleReflectionValidation(); // TODO: fix
+//void runSingleReflectionValidation();
 
 #endif // VALIDATION_SINGLE_REFLECTION_H

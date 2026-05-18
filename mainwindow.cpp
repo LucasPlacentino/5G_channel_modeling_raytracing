@@ -367,8 +367,8 @@ void MainWindow::on_cellYspinBox_valueChanged(double y)
 
 void MainWindow::on_actionRun_Free_Space_Validation_triggered()
 {
-    //Validation_view = runFreeSpaceValidation();
-    runFreeSpaceValidation();
+    Validation_view = runFreeSpaceValidation();
+    //runFreeSpaceValidation();
 }
 
 
@@ -376,13 +376,14 @@ void MainWindow::on_actionRun_Free_Space_Validation_triggered()
 
 void MainWindow::on_actionRun_Single_Reflection_Validation_triggered()
 {
-    //Validation_view = runSingleReflectionValidation();
+    Validation_view = runSingleReflectionValidation();
+    //runSingleReflectionValidation();
 }
 
 
 void MainWindow::on_actionRun_Double_Reflection_Validation_triggered()
 {
-    //Validation_view = runDoubleReflectionValidation();
+    Validation_view = runDoubleReflectionValidation();
 }
 
 
