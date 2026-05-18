@@ -49,7 +49,9 @@ private slots:
 
     void on_actionRun_Double_Reflection_Validation_triggered();
 
-    void on_actionRun_Triple_Reflection_Valdiation_triggered();
+    void on_actionRun_Triple_Reflection_Validation_triggered();
+
+    void on_actionRun_Recursive_Validation_triggered();
 
 private:
     Ui::MainWindow *ui;

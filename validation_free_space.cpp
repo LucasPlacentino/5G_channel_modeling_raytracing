@@ -81,26 +81,14 @@ qreal computeSimulatedDirectRayPower(Transmitter* transmitter, Receiver* receive
 // ============================================================================
 
 /**
- * Create graphics scene with two perpendicular walls
+ * Create graphics scene (free space)
  */
-QGraphicsScene* createGraphicsSceneWithWallsFS()
+QGraphicsScene* createGraphicsSceneFS()
 {
     QGraphicsScene* scene = new QGraphicsScene();
     scene->setSceneRect(-scene_offset, -scene_offset, 1000 + scene_offset*2, 700 + scene_offset*2);
     QBrush bgBrush(Qt::black);
     scene->setBackgroundBrush(bgBrush);
-
-    Obstacle* wall1 = new Obstacle(QVector2D(0, 0), QVector2D(50, 0), GenericWall, 0.4);
-    scene->addItem(wall1->graphics);
-    qDebug() << "Wall 1 created (horizontal)";
-
-    Obstacle* wall2 = new Obstacle(QVector2D(0, 0), QVector2D(0, 70), GenericWall, 0.4);
-    scene->addItem(wall2->graphics);
-    qDebug() << "Wall 2 created (vertical)";
-
-    Obstacle* wall3 = new Obstacle(QVector2D(50,0), QVector2D(100,20), GenericWall, 0.4);
-    scene->addItem(wall3->graphics);
-    qDebug() << "Wall 3 created (slanted)";
 
     return scene;
 }
@@ -203,8 +191,8 @@ QGraphicsView* runFreeSpaceValidation()
     qDebug() << "  Antenna Resistance:" << 73.0 << "Ohm";
     qDebug() << "  Vacuum Impedance (Z0):" << Z_0 << "Ohm";
     
-    validation_scene = createGraphicsSceneWithWallsFS();
-    qDebug() << "\nGraphics scene created with 2 perpendicular obstacle walls";
+    validation_scene = createGraphicsSceneFS();
+    qDebug() << "\nGraphics scene created";
     
     testCase();
     

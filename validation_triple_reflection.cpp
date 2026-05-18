@@ -28,6 +28,7 @@
 extern Obstacle* wall1;
 extern Obstacle* wall2;
 extern Obstacle* wall3;
+Obstacle* wall4;
 
 // ============================================================================
 // THEORETICAL CALCULATIONS
@@ -129,57 +130,38 @@ qreal computeTheoreticalPower_TripleReflection(const QVector2D& tx_pos, const QV
 // ============================================================================
 
 /**
- * Compute received power for triple-reflected ray
+ * Helper: Try a specific reflection path (ordered wall combination)
  */
-qreal computeSimulatedTripleReflectionPower(Transmitter* transmitter, Receiver* receiver,
-                                             Obstacle* wall_1, Obstacle* wall_2, Obstacle* wall_3,
-                                             QVector2D& refl_1_out, QVector2D& refl_2_out,
-                                             QVector2D& refl_3_out)
+qreal tryReflectionPath(Transmitter* transmitter, Receiver* receiver,
+                        Obstacle* wall_1, Obstacle* wall_2, Obstacle* wall_3,
+                        QVector2D& refl_1_out, QVector2D& refl_2_out, QVector2D& refl_3_out)
 {
     QVector2D tx_pos(transmitter->x(), transmitter->y());
     QVector2D rx_pos(receiver->x(), receiver->y());
     
-    qDebug() << "\n--- SIMULATED CALCULATION (TRIPLE REFLECTION) ---";
-    qDebug() << "TX:" << tx_pos.x() << "," << tx_pos.y();
-    qDebug() << "RX:" << rx_pos.x() << "," << rx_pos.y();
-    
-    // Triple image method:
-    // 1. Mirror RX through wall_3
+    // Apply method of images: mirror in REVERSE order of reflections
     QVector2D rx_image_1 = mirrorPoint_TR(rx_pos, wall_3);
-    
-    // 2. Mirror rx_image_1 through wall_2
     QVector2D rx_image_2 = mirrorPoint_TR(rx_image_1, wall_2);
-    
-    // 3. Mirror rx_image_2 through wall_1
     QVector2D rx_image_3 = mirrorPoint_TR(rx_image_2, wall_1);
     
-    // 4. Find first reflection on wall_1 (TX to rx_image_3)
+    // Find first reflection on wall_1 (TX to rx_image_3)
     if (!findReflectionPoint_TR(tx_pos, rx_image_3, wall_1, refl_1_out)) {
-        qDebug() << "First reflection point not on wall segment";
         return 0.0;
     }
     
     qreal d1 = (refl_1_out - tx_pos).length();
-    if (d1 < 0.01) {
-        qDebug() << "WARNING: First reflection point too close to TX";
-        return 0.0;
-    }
+    if (d1 < 0.01) return 0.0;
     
-    // 5. Find second reflection on wall_2 (refl_1 to rx_image_2)
+    // Find second reflection on wall_2 (refl_1 to rx_image_2)
     if (!findReflectionPoint_TR(refl_1_out, rx_image_2, wall_2, refl_2_out)) {
-        qDebug() << "Second reflection point not on wall segment";
         return 0.0;
     }
     
     qreal d2 = (refl_2_out - refl_1_out).length();
-    if (d2 < 0.01) {
-        qDebug() << "WARNING: Second reflection point too close";
-        return 0.0;
-    }
+    if (d2 < 0.01) return 0.0;
     
-    // 6. Find third reflection on wall_3 (refl_2 to rx_image_1)
+    // Find third reflection on wall_3 (refl_2 to rx_image_1)
     if (!findReflectionPoint_TR(refl_2_out, rx_image_1, wall_3, refl_3_out)) {
-        qDebug() << "Third reflection point not on wall segment";
         return 0.0;
     }
     
@@ -187,22 +169,15 @@ qreal computeSimulatedTripleReflectionPower(Transmitter* transmitter, Receiver* 
     qreal d4 = (rx_pos - refl_3_out).length();
     
     if (d3 < 0.01 || d4 < 0.01) {
-        qDebug() << "WARNING: Third reflection point too close";
         return 0.0;
     }
     
-    qDebug() << "Reflection point 1:" << refl_1_out.x() << "," << refl_1_out.y();
-    qDebug() << "Reflection point 2:" << refl_2_out.x() << "," << refl_2_out.y();
-    qDebug() << "Reflection point 3:" << refl_3_out.x() << "," << refl_3_out.y();
-    qDebug() << "d1:" << d1 << "m, d2:" << d2 << "m, d3:" << d3 << "m, d4:" << d4 << "m";
-    
-    // Path loss factors
+    // Compute power
     qreal path_loss_1 = std::pow(lambda / (4.0 * M_PI * d1), 2.0);
     qreal path_loss_2 = std::pow(lambda / (4.0 * M_PI * d2), 2.0);
     qreal path_loss_3 = std::pow(lambda / (4.0 * M_PI * d3), 2.0);
     qreal path_loss_4 = std::pow(lambda / (4.0 * M_PI * d4), 2.0);
     
-    // Reflection coefficients
     qreal gamma_mag_1 = computeReflectionCoeff_Magnitude_TR(0.0);
     qreal gamma_mag_2 = computeReflectionCoeff_Magnitude_TR(0.0);
     qreal gamma_mag_3 = computeReflectionCoeff_Magnitude_TR(0.0);
@@ -210,15 +185,104 @@ qreal computeSimulatedTripleReflectionPower(Transmitter* transmitter, Receiver* 
     qreal gamma_sq_2 = gamma_mag_2 * gamma_mag_2;
     qreal gamma_sq_3 = gamma_mag_3 * gamma_mag_3;
     
-    qDebug() << "|Γ1|²:" << gamma_sq_1 << ", |Γ2|²:" << gamma_sq_2 << ", |Γ3|²:" << gamma_sq_3;
-    
     qreal P_RX = transmitter->power * transmitter->gain * receiver->gain *
                  gamma_sq_1 * gamma_sq_2 * gamma_sq_3 *
                  path_loss_1 * path_loss_2 * path_loss_3 * path_loss_4;
     
-    qDebug() << "P_RX (simulated):" << P_RX << "W";
-    
     return P_RX;
+}
+
+/**
+ * Recursive: try all combinations of walls for reflections
+ */
+void tryAllReflectionCombinations(Transmitter* transmitter, Receiver* receiver,
+                                  QList<Obstacle*> available_walls,
+                                  QList<Obstacle*> walls_used,
+                                  QVector2D& best_refl_1, QVector2D& best_refl_2, QVector2D& best_refl_3,
+                                  qreal& best_power)
+{
+    // Base case: we've selected 3 walls
+    if (walls_used.size() == 3) {
+        QVector2D refl_1, refl_2, refl_3;
+        qreal power = tryReflectionPath(transmitter, receiver, 
+                                        walls_used[0], walls_used[1], walls_used[2],
+                                        refl_1, refl_2, refl_3);
+        
+        if (power > best_power) {
+            best_power = power;
+            best_refl_1 = refl_1;
+            best_refl_2 = refl_2;
+            best_refl_3 = refl_3;
+        }
+        return;
+    }
+    
+    // Recursive case: try each remaining wall
+    for (int i = 0; i < available_walls.size(); i++) {
+        Obstacle* wall = available_walls[i];
+        
+        // Create new list without this wall (to avoid reusing same wall)
+        QList<Obstacle*> remaining_walls;
+        for (int j = 0; j < available_walls.size(); j++) {
+            if (j != i) {
+                remaining_walls.append(available_walls[j]);
+            }
+        }
+        
+        // Add this wall to used list and recurse
+        QList<Obstacle*> new_used = walls_used;
+        new_used.append(wall);
+        
+        tryAllReflectionCombinations(transmitter, receiver, remaining_walls, new_used,
+                                     best_refl_1, best_refl_2, best_refl_3, best_power);
+    }
+}
+
+/**
+ * Compute received power for triple-reflected ray (recursive approach)
+ */
+qreal computeSimulatedTripleReflectionPower(Transmitter* transmitter, Receiver* receiver,
+                                             Obstacle* wall_1, Obstacle* wall_2, Obstacle* wall_3, Obstacle* wall_4,
+                                             QVector2D& refl_1_out, QVector2D& refl_2_out,
+                                             QVector2D& refl_3_out)
+{
+    QVector2D tx_pos(transmitter->x(), transmitter->y());
+    QVector2D rx_pos(receiver->x(), receiver->y());
+    
+    qDebug() << "\n--- SIMULATED CALCULATION (TRIPLE REFLECTION - RECURSIVE) ---";
+    qDebug() << "TX:" << tx_pos.x() << "," << tx_pos.y();
+    qDebug() << "RX:" << rx_pos.x() << "," << rx_pos.y();
+    
+    // Prepare list of available walls
+    QList<Obstacle*> available_walls;
+    available_walls.append(wall_1);
+    available_walls.append(wall_2);
+    available_walls.append(wall_3);
+    available_walls.append(wall_4);
+    
+    qreal best_power = 0.0;
+    QVector2D best_refl_1, best_refl_2, best_refl_3;
+    
+    // Try all combinations recursively
+    QList<Obstacle*> walls_used;
+    tryAllReflectionCombinations(transmitter, receiver, available_walls, walls_used,
+                                 best_refl_1, best_refl_2, best_refl_3, best_power);
+    
+    if (best_power > 0.0) {
+        refl_1_out = best_refl_1;
+        refl_2_out = best_refl_2;
+        refl_3_out = best_refl_3;
+        
+        qDebug() << "Best reflection found:";
+        qDebug() << "Reflection point 1:" << best_refl_1.x() << "," << best_refl_1.y();
+        qDebug() << "Reflection point 2:" << best_refl_2.x() << "," << best_refl_2.y();
+        qDebug() << "Reflection point 3:" << best_refl_3.x() << "," << best_refl_3.y();
+        qDebug() << "P_RX (simulated):" << best_power << "W";
+    } else {
+        qDebug() << "No valid triple reflection found";
+    }
+    
+    return best_power;
 }
 
 // ============================================================================
@@ -251,19 +315,23 @@ QGraphicsScene* createGraphicsSceneWithWallsTR()
     qDebug() << "Wall 3 created (slanted)";
 
     // Wall 4: Additional wall for three reflections
+    wall4 = new Obstacle(QVector2D(0, 70), QVector2D(100, 70), GenericWall, 0.4);
+    scene->addItem(wall4->graphics);
+    qDebug() << "Wall 4 created (horizontal at top)";
 
     return scene;
 }
 
 /**
- * Draw triple-reflected ray path
+ * Draw triple-reflected ray path with specified color
  */
 void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Receiver* receiver,
-                            const QVector2D& refl_1, const QVector2D& refl_2, const QVector2D& refl_3)
+                            const QVector2D& refl_1, const QVector2D& refl_2, const QVector2D& refl_3,
+                            QColor ray_color = Qt::cyan)
 {
     if (!scene || !transmitter || !receiver) return;
     
-    QPen ray_pen(Qt::cyan);
+    QPen ray_pen(ray_color);
     ray_pen.setWidthF(2);
     
     // TX to first reflection
@@ -272,7 +340,6 @@ void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Rec
         10 * refl_1.x(), 10 * refl_1.y()
     );
     ray1->setPen(ray_pen);
-    ray1->setToolTip("Triple Reflected Ray - TX to Wall 1");
     
     // First to second reflection
     QGraphicsLineItem* ray2 = scene->addLine(
@@ -280,7 +347,6 @@ void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Rec
         10 * refl_2.x(), 10 * refl_2.y()
     );
     ray2->setPen(ray_pen);
-    ray2->setToolTip("Triple Reflected Ray - Wall 1 to Wall 2");
     
     // Second to third reflection
     QGraphicsLineItem* ray3 = scene->addLine(
@@ -288,7 +354,6 @@ void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Rec
         10 * refl_3.x(), 10 * refl_3.y()
     );
     ray3->setPen(ray_pen);
-    ray3->setToolTip("Triple Reflected Ray - Wall 2 to Wall 3");
     
     // Third reflection to RX
     QGraphicsLineItem* ray4 = scene->addLine(
@@ -296,7 +361,6 @@ void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Rec
         10 * receiver->x(), 10 * receiver->y()
     );
     ray4->setPen(ray_pen);
-    ray4->setToolTip("Triple Reflected Ray - Wall 3 to RX");
     
     // Mark reflection points
     QList<QVector2D> points = {refl_1, refl_2, refl_3};
@@ -305,11 +369,10 @@ void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Rec
         QGraphicsEllipseItem* marker = scene->addEllipse(
             10 * point.x() - 3, 10 * point.y() - 3, 6, 6
         );
-        QPen marker_pen(Qt::cyan);
+        QPen marker_pen(ray_color);
         marker_pen.setWidthF(1);
         marker->setPen(marker_pen);
-        marker->setBrush(QBrush(Qt::cyan));
-        marker->setToolTip(QString("Reflection Point %1").arg(i + 1));
+        marker->setBrush(QBrush(ray_color));
     }
 }
 
@@ -317,12 +380,9 @@ void drawTripleReflectedRay(QGraphicsScene* scene, Transmitter* transmitter, Rec
 // VALIDATION TEST CASE
 // ============================================================================
 
-/**
- * Triple reflection validation test
- */
 void testCase_TripleReflection()
 {
-    qDebug() << "\n========== TRIPLE REFLECTION TEST CASE ==========";
+    qDebug() << "\n========== TRIPLE REFLECTION TEST CASE (ALL PERMUTATIONS) ==========";
 
     qreal tx_power = 0.1;
     Transmitter* tx = new Transmitter(10.0, 5.2, 0, "TX_Test");
@@ -335,47 +395,84 @@ void testCase_TripleReflection()
     QVector2D tx_pos(tx->x(), tx->y());
     QVector2D rx_pos(rx->x(), rx->y());
 
-    // Always add TX and RX to scene
     if (validation_scene) {
         addTransmitterToScene(validation_scene, tx);
         addReceiverToScene(validation_scene, rx);
     }
 
-    // Test triple reflection on walls 1, 2, and 3
-    QVector2D refl_1, refl_2, refl_3;
-    qreal P_simulated = computeSimulatedTripleReflectionPower(tx, rx, wall1, wall2, wall3, 
-                                                               refl_1, refl_2, refl_3);
-    
-    if (P_simulated == 0.0) {
-        qDebug() << "No valid triple reflection found";
-        return;
+    QList<Obstacle*> all_walls = {wall1, wall2, wall3, wall4};
+    QList<QColor> colors = {Qt::cyan, Qt::yellow, Qt::magenta, Qt::green, 
+                            Qt::red, Qt::blue, Qt::white, Qt::gray,
+                            Qt::darkCyan, Qt::darkYellow, Qt::darkMagenta, Qt::darkGreen,
+                            Qt::lightGray, Qt::darkGray, Qt::darkRed, Qt::darkBlue,
+                            Qt::darkGreen, Qt::darkRed, Qt::darkBlue, Qt::darkCyan,
+                            Qt::cyan, Qt::yellow, Qt::magenta, Qt::green};
+
+    int valid_count = 0;
+    int perm_idx = 0;
+
+    // Generate all permutations: choose 3 walls in order from 4 walls
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            if (j == i) continue; // Skip if same wall
+            for (int k = 0; k < 4; k++) {
+                if (k == i || k == j) continue; // Skip if same wall
+                
+                Obstacle* w1 = all_walls[i];
+                Obstacle* w2 = all_walls[j];
+                Obstacle* w3 = all_walls[k];
+                
+                QString wall_names;
+                if (w1 == wall1) wall_names += "1"; else if (w1 == wall2) wall_names += "2"; else if (w1 == wall3) wall_names += "3"; else wall_names += "4";
+                wall_names += "-";
+                if (w2 == wall1) wall_names += "1"; else if (w2 == wall2) wall_names += "2"; else if (w2 == wall3) wall_names += "3"; else wall_names += "4";
+                wall_names += "-";
+                if (w3 == wall1) wall_names += "1"; else if (w3 == wall2) wall_names += "2"; else if (w3 == wall3) wall_names += "3"; else wall_names += "4";
+                
+                qDebug() << "\n[Perm" << perm_idx + 1 << "] Testing walls:" << wall_names;
+                
+                QVector2D refl_1, refl_2, refl_3;
+                qreal P_simulated = tryReflectionPath(tx, rx, w1, w2, w3, refl_1, refl_2, refl_3);
+                
+                if (P_simulated <= 0.0) {
+                    qDebug() << "✗ No valid triple reflection for walls" << wall_names;
+                } else {
+                    valid_count++;
+                    qDebug() << "✓ Found valid triple reflection for walls:" << wall_names;
+                    
+                    qreal gamma_mag = computeReflectionCoeff_Magnitude_TR(0.0);
+                    qreal P_theoretical = computeTheoreticalPower_TripleReflection(
+                        tx_pos, rx_pos, refl_1, refl_2, refl_3, tx->power, tx->gain, rx->gain, 
+                        gamma_mag, gamma_mag, gamma_mag
+                    );
+                    
+                    qreal P_theoretical_dBm = powerW_to_dBm(P_theoretical);
+                    qreal P_simulated_dBm = powerW_to_dBm(P_simulated);
+                    
+                    qreal error_percent = std::abs(P_simulated - P_theoretical) / P_theoretical * 100.0;
+                    
+                    qDebug() << "Theoretical P_RX:" << P_theoretical << "W =" << P_theoretical_dBm << "dBm";
+                    qDebug() << "Simulated P_RX:" << P_simulated << "W =" << P_simulated_dBm << "dBm";
+                    qDebug() << "Error:" << error_percent << "%";
+                    
+                    if (error_percent < 1.0) {
+                        qDebug() << "✓ PASS";
+                    } else {
+                        qDebug() << "✗ FAIL";
+                    }
+                    
+                    if (validation_scene) {
+                        drawTripleReflectedRay(validation_scene, tx, rx, refl_1, refl_2, refl_3, colors[perm_idx % colors.size()]);
+                    }
+                }
+                
+                perm_idx++;
+            }
+        }
     }
     
-    qreal gamma_mag = computeReflectionCoeff_Magnitude_TR(0.0);
-    qreal P_theoretical = computeTheoreticalPower_TripleReflection(
-        tx_pos, rx_pos, refl_1, refl_2, refl_3, tx->power, tx->gain, rx->gain, 
-        gamma_mag, gamma_mag, gamma_mag
-    );
-    
-    qreal P_theoretical_dBm = powerW_to_dBm(P_theoretical);
-    qreal P_simulated_dBm = powerW_to_dBm(P_simulated);
-    rx->power = P_simulated;
-    
-    qreal error_percent = std::abs(P_simulated - P_theoretical) / P_theoretical * 100.0;
-    
-    qDebug() << "Theoretical P_RX:" << P_theoretical << "W =" << P_theoretical_dBm << "dBm";
-    qDebug() << "Simulated P_RX:" << P_simulated << "W =" << P_simulated_dBm << "dBm";
-    qDebug() << "Error:" << error_percent << "%";
-    
-    if (error_percent < 1.0) {
-        qDebug() << "✓ PASS";
-    } else {
-        qDebug() << "✗ FAIL";
-    }
-    
-    if (validation_scene) {
-        drawTripleReflectedRay(validation_scene, tx, rx, refl_1, refl_2, refl_3);
-    }
+    qDebug() << "\n========== ALL 24 PERMUTATIONS TESTED ==========";
+    qDebug() << "Valid reflections found:" << valid_count << "/ 24";
 }
 
 // ============================================================================

@@ -83,9 +83,9 @@ QGraphicsView* displayVisualization(QGraphicsScene* scene, int nb_refl)
 
     QGraphicsView* view = new QGraphicsView(scene);
     if (nb_refl == 0) {
-        view->setWindowTitle("Ray Tracing Validation - Free Path - Visualization");
+        view->setWindowTitle("Validation - Free Space - Ray-TracingVisualization");
     } else {
-        view->setWindowTitle("Ray Tracing Validation - " + QString::number(nb_refl) + " Reflections - Visualization");
+        view->setWindowTitle("Validation - " + QString::number(nb_refl) + " Reflections - Ray-Tracing Visualization");
     }
     view->setGeometry(scene_offset, scene_offset, 1000 + 4*scene_offset, 700 + 4*scene_offset);
     view->show();

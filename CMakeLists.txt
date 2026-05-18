@@ -37,6 +37,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         parameters.h
         raysegment.h raysegment.cpp
         resources.qrc
+        validation_recursive.h validation_recursive.cpp
         #algorithme.h algorithme.cpp
 
 

@@ -748,7 +748,8 @@
     <addaction name="actionRun_Free_Space_Validation"/>
     <addaction name="actionRun_Single_Reflection_Validation"/>
     <addaction name="actionRun_Double_Reflection_Validation"/>
-    <addaction name="actionRun_Triple_Reflection_Valdiation"/>
+    <addaction name="actionRun_Triple_Reflection_Validation"/>
+    <addaction name="actionRun_Recursive_Validation"/>
     <addaction name="actionSave_Validation_image"/>
    </widget>
    <addaction name="menuTest"/>
@@ -832,9 +833,20 @@
     <string>Ctrl+U</string>
    </property>
   </action>
-  <action name="actionRun_Triple_Reflection_Valdiation">
+  <action name="actionRun_Triple_Reflection_Validation">
    <property name="text">
-    <string>Run Triple Reflection Valdiation</string>
+    <string>Run Triple Reflection Validation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+I</string>
+   </property>
+  </action>
+  <action name="actionRun_Recursive_Validation">
+   <property name="text">
+    <string>Run Recursive Validation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>

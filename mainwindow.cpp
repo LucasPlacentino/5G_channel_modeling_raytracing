@@ -13,6 +13,7 @@
 #include "validation_single_reflection.h"
 #include "validation_double_reflection.h"
 #include "validation_triple_reflection.h"
+#include "validation_recursive.h"
 QGraphicsView* Validation_view;
 
 Simulation simulation = Simulation(); // The global simulation object, use `extern Simulation simulation;` in other files?
@@ -387,8 +388,14 @@ void MainWindow::on_actionRun_Double_Reflection_Validation_triggered()
 }
 
 
-void MainWindow::on_actionRun_Triple_Reflection_Valdiation_triggered()
+void MainWindow::on_actionRun_Triple_Reflection_Validation_triggered()
 {
     Validation_view = runTripleReflectionValidation();
+}
+
+
+void MainWindow::on_actionRun_Recursive_Validation_triggered()
+{
+    Validation_view = runRecursiveValidation();
 }
 
