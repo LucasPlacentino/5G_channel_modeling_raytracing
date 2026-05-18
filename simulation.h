@@ -16,7 +16,7 @@ public:
     Simulation(bool show = true); // constructor
     bool ran = false;
     bool is_running = false;
-    qreal resolution = 0.5; // meters, default is 0.5m x 0.5m cells
+    qreal resolution = 1.0; // meters, default is (0.5m x 0.5m, no 1x1 now) 1sqm cells
 
     void run(QProgressBar* progress_bar);
     void createBaseStation(Transmitter* transmitter);
@@ -33,7 +33,7 @@ public:
 
     bool lift_is_on_floor = false;
     bool show_cell_outline = false;
-    int max_ray_reflections = 2;
+    int max_ray_reflections = 2; // TODO: 3 reflections
     bool showRaySingleCell = false;
 
     // --- NEW : ---

@@ -750,6 +750,7 @@
     <addaction name="actionRun_Free_Space_Validation"/>
     <addaction name="actionRun_Single_Reflection_Validation"/>
     <addaction name="actionRun_Double_Reflection_Validation"/>
+    <addaction name="actionRun_Triple_Reflection_Valdiation"/>
     <addaction name="actionSave_Validation_image"/>
    </widget>
    <addaction name="menuTest"/>
@@ -831,6 +832,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+U</string>
+   </property>
+  </action>
+  <action name="actionRun_Triple_Reflection_Valdiation">
+   <property name="text">
+    <string>Run Triple Reflection Valdiation</string>
    </property>
   </action>
  </widget>

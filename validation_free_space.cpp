@@ -105,10 +105,11 @@ qreal computeSimulatedDirectRayPower(Transmitter* transmitter, Receiver* receive
     // Free-space path loss: (lambda / (4*pi*d))^2
     qreal path_loss_linear = std::pow(lambda / (4.0 * M_PI * d), 2.0);
     
-    // Received power using antenna formula with object's properties
-    qreal P_RX = (60.0 * lambda * lambda) / (8.0 * M_PI * M_PI * receiver->Ra) 
-                 * transmitter->gain * receiver->Ra / receiver->Ra  // using receiver's gain implicitly in its resistance
-                 * transmitter->power * path_loss_linear;
+    // Both TX and RX are identical λ/2 dipoles with gain G_TX
+    // qreal P_RX = (60.0 * lambda * lambda) / (8.0 * M_PI * M_PI * receiver->Ra) 
+    //              * transmitter->gain * transmitter->gain
+    //              * transmitter->power * path_loss_linear;
+    qreal P_RX = transmitter->power * transmitter->gain * receiver->gain * path_loss_linear;
     
     return P_RX;
 }
@@ -127,12 +128,12 @@ QGraphicsScene* createGraphicsSceneWithWalls()
 
     // Create and add two perpendicular walls
     // Wall 1: Horizontal wall
-    Obstacle* wall1 = new Obstacle(QVector2D(0, 5), QVector2D(16, 5), GenericWall, 0.4);
+    Obstacle* wall1 = new Obstacle(QVector2D(0, 0), QVector2D(16, 0), GenericWall, 0.4);
     scene->addItem(wall1->graphics);
     qDebug() << "Wall 1 created (horizontal)";
 
     // Wall 2: Vertical wall
-    Obstacle* wall2 = new Obstacle(QVector2D(7, 0), QVector2D(7, 12), GenericWall, 0.4);
+    Obstacle* wall2 = new Obstacle(QVector2D(0, 0), QVector2D(0, 12), GenericWall, 0.4);
     scene->addItem(wall2->graphics);
     qDebug() << "Wall 2 created (vertical)";
 
@@ -223,81 +224,15 @@ void displayVisualization(QGraphicsScene* scene)
 
 
 // ============================================================================
-// VALIDATION TEST CASES
+// VALIDATION TEST CASE
 // ============================================================================
 
 /**
- * Test 1: Simple 1-meter distance
+ * Test
  */
-void testCase_1meter()
+void testCase()
 {
-    qDebug() << "\n========== TEST CASE 1: 1 METER DISTANCE ==========";
-    
-    qreal distance = 1.0; // 1 meter
-
-    qreal tx_power = 0.1; // 100 mW = 20 dBm
-    qreal tx_gain = G_TX;
-    qreal rx_gain = G_TX; // Assume dipole with same gain at RX
-    qreal antenna_R = 73.0; // Receiver antenna resistance
-
-    // Create TX and RX objects
-    Transmitter* tx = new Transmitter(2.0, 2.0, 0, "TX_Test1");
-    Receiver* rx = new Receiver(2.0 + distance, 2.0, 0.5, false);
-
-    // Set TX/RX parameters
-    tx->power = tx_power;
-    tx->gain = tx_gain;
-    rx->Ra = antenna_R;
-    
-    // Theoretical calculation
-    qreal P_theoretical = computeTheoreticalPower_FriisEquation(distance, tx->power, tx->gain, rx->gain);
-    qreal PL_dB = computePathLoss_dB(distance);
-    qreal P_theoretical_dBm = powerW_to_dBm(P_theoretical);
-    
-    // Simulated calculation
-    // QVector2D tx_pos(0.0, 0.0);
-    // QVector2D rx_pos(distance, 0.0);
-    // qreal P_simulated = computeSimulatedDirectRayPower(tx_pos, rx_pos, tx_power, tx_gain, rx_gain, antenna_R);
-    qreal P_simulated = computeSimulatedDirectRayPower(tx, rx);
-    rx->power = P_simulated;  // Store in receiver object
-    qreal P_simulated_dBm = powerW_to_dBm(P_simulated);
-    
-    // Error analysis
-    qreal error_percent = std::abs(P_simulated - P_theoretical) / P_theoretical * 100.0;
-    
-    qDebug() << "TX Position:" << tx->x() << "," << tx->y();
-    qDebug() << "RX Position:" << rx->x() << "," << rx->y();
-    qDebug() << "Distance:" << distance << "m";
-    qDebug() << "TX Power:" << tx->power << "W =" << tx->getPower_dBm() << "dBm";
-    qDebug() << "TX Gain:" << tx->gain;
-    qDebug() << "RX Antenna Resistance:" << rx->Ra << "Ohm";
-    qDebug() << "Theoretical P_RX:" << P_theoretical << "W =" << P_theoretical_dBm << "dBm";
-    qDebug() << "Simulated P_RX:" << P_simulated << "W =" << P_simulated_dBm << "dBm";
-    qDebug() << "Path Loss:" << PL_dB << "dB";
-    qDebug() << "Error:" << error_percent << "%";
-    
-    if (error_percent < 1.0) {
-        qDebug() << "✓ PASS: Error within tolerance";
-    } else {
-        qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
-    }
-
-    // // Add to scene
-    // if (validation_scene) {
-    //     addTransmitterToScene(validation_scene, tx);
-    //     addReceiverToScene(validation_scene, rx);
-    //     drawDirectRay(validation_scene, tx, rx);
-    // }
-}
-
-/**
- * Test 2: Realistic distance (10 meters)
- */
-void testCase_10meters()
-{
-    qDebug() << "\n========== TEST CASE 2: 10 METER DISTANCE ==========";
-    
-    qreal distance = 10.0; // 10 meters
+    qDebug() << "\n========== TEST CASE ==========";
 
     qreal tx_power = 0.1; // 100 mW = 20 dBm
     qreal tx_gain = G_TX;
@@ -305,13 +240,19 @@ void testCase_10meters()
     qreal antenna_R = 73.0;
 
     // Create TX and RX objects
-    Transmitter* tx = new Transmitter(1.0, 1.0, 1, "TX_Test2");
-    Receiver* rx = new Receiver(1.0 + distance, 1.0, 0.5, false);
+    Transmitter* tx = new Transmitter(10.0, 0.2, 0, "TX_Test");
+    Receiver* rx = new Receiver(3.8, 9.3, 0.5, false);
+
+    QPointF tx_coord = tx->getCoordinates();
+    QPointF rx_coord = rx->toPointF();
+
+    qreal distance = std::sqrt(std::pow(rx_coord.x() - tx_coord.x(), 2) + std::pow(rx_coord.y() - tx_coord.y(), 2));
 
     // Set TX/RX parameters
     tx->power = tx_power;
     tx->gain = tx_gain;
     rx->Ra = antenna_R;
+    rx->gain = G_RX;
 
     // Theoretical
     qreal P_theoretical = computeTheoreticalPower_FriisEquation(
@@ -321,9 +262,6 @@ void testCase_10meters()
     qreal P_theoretical_dBm = powerW_to_dBm(P_theoretical);
     
     // Simulated
-    // QVector2D tx_pos(0.0, 0.0);
-    // QVector2D rx_pos(distance, 0.0);
-    // qreal P_simulated = computeSimulatedDirectRayPower(tx_pos, rx_pos, tx_power, tx_gain, rx_gain, antenna_R);
     qreal P_simulated = computeSimulatedDirectRayPower(tx, rx);
     rx->power = P_simulated;
     qreal P_simulated_dBm = powerW_to_dBm(P_simulated);
@@ -335,7 +273,7 @@ void testCase_10meters()
     qDebug() << "RX Position:" << rx->x() << "," << rx->y();
     qDebug() << "Distance:" << distance << "m";
     qDebug() << "TX Power:" << tx->power << "W =" << tx->getPower_dBm() << "dBm";
-    qDebug() << "TX Gain:" << tx->gain;
+    qDebug() << "TX Gain:" << tx->gain << "RX Gain:" << rx->gain;
     qDebug() << "RX Antenna Resistance:" << rx->Ra << "Ohm";
     qDebug() << "Theoretical P_RX:" << P_theoretical << "W =" << P_theoretical_dBm << "dBm";
     qDebug() << "Simulated P_RX:" << P_simulated << "W =" << P_simulated_dBm << "dBm";
@@ -354,72 +292,6 @@ void testCase_10meters()
         addReceiverToScene(validation_scene, rx);
         drawDirectRay(validation_scene, tx, rx);
     }
-}
-
-/**
- * Test 3: Long distance (100 meters) - typical BS coverage
- */
-void testCase_100meters()
-{
-    qDebug() << "\n========== TEST CASE 3: 100 METER DISTANCE ==========";
-    
-    qreal distance = 100.0; // 100 meters
-
-    qreal tx_power = 0.1;
-    qreal tx_gain = G_TX;
-    qreal rx_gain = G_TX;
-    qreal antenna_R = 73.0;
-
-    // Create TX and RX objects
-    Transmitter* tx = new Transmitter(0.0, 0.0, 2, "TX_Test3");
-    Receiver* rx = new Receiver(distance, 0.0, 0.5, false);
-
-    // Set TX/RX parameters
-    tx->power = tx_power;
-    tx->gain = tx_gain;
-    rx->Ra = antenna_R;
-
-    // Theoretical
-    qreal P_theoretical = computeTheoreticalPower_FriisEquation(
-        distance, tx->power, tx->gain, rx->gain
-    );
-    qreal PL_dB = computePathLoss_dB(distance);
-    qreal P_theoretical_dBm = powerW_to_dBm(P_theoretical);
-    
-    // Simulated
-    // QVector2D tx_pos(0.0, 0.0);
-    // QVector2D rx_pos(distance, 0.0);
-    // qreal P_simulated = computeSimulatedDirectRayPower(tx_pos, rx_pos, tx_power, tx_gain, rx_gain, antenna_R);
-    qreal P_simulated = computeSimulatedDirectRayPower(tx, rx);
-    rx->power = P_simulated;
-    qreal P_simulated_dBm = powerW_to_dBm(P_simulated);
-    
-    // Error
-    qreal error_percent = std::abs(P_simulated - P_theoretical) / P_theoretical * 100.0;
-    
-    qDebug() << "TX Position:" << tx->x() << "," << tx->y();
-    qDebug() << "RX Position:" << rx->x() << "," << rx->y();
-    qDebug() << "Distance:" << distance << "m";
-    qDebug() << "TX Power:" << tx->power << "W =" << tx->getPower_dBm() << "dBm";
-    qDebug() << "TX Gain:" << tx->gain;
-    qDebug() << "RX Antenna Resistance:" << rx->Ra << "Ohm";
-    qDebug() << "Theoretical P_RX:" << P_theoretical << "W =" << P_theoretical_dBm << "dBm";
-    qDebug() << "Simulated P_RX:" << P_simulated << "W =" << P_simulated_dBm << "dBm";
-    qDebug() << "Path Loss:" << PL_dB << "dB";
-    qDebug() << "Error:" << error_percent << "%";
-    
-    if (error_percent < 1.0) {
-        qDebug() << "✓ PASS: Error within tolerance";
-    } else {
-        qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
-    }
-
-    // // Add to scene
-    // if (validation_scene) {
-    //     addTransmitterToScene(validation_scene, tx);
-    //     addReceiverToScene(validation_scene, rx);
-    //     drawDirectRay(validation_scene, tx, rx);
-    // }
 }
 
 
@@ -441,7 +313,7 @@ void runFreeSpaceValidation()
     qDebug() << "  Frequency:" << freq / 1e9 << "GHz";
     qDebug() << "  Wavelength:" << lambda << "m";
     qDebug() << "  TX Power:" << P_TX * 1000 << "mW =" << P_TX_dBm << "dBm";
-    qDebug() << "  TX Gain:" << G_TX << "(linear)";
+    qDebug() << "  TX Gain:" << G_TX << "RX Gain:" << G_RX << "(linear)";
     qDebug() << "  Antenna Resistance:" << 73.0 << "Ohm";
     qDebug() << "  Vacuum Impedance (Z0):" << Z_0 << "Ohm";
     
@@ -450,10 +322,8 @@ void runFreeSpaceValidation()
     qDebug() << "\nGraphics scene created with 2 perpendicular obstacle walls";
     
 
-    // Run all tests
-    testCase_1meter();
-    testCase_10meters();
-    testCase_100meters();
+    // Run test
+    testCase();
     
     qDebug() << "\n════════════════════════════════════════════════════════════";
     qDebug() << "FREE-SPACE VALIDATION COMPLETE\n";

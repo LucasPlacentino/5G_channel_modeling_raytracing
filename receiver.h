@@ -15,6 +15,7 @@ public:
 
     QGraphicsRectItem* graphics = new QGraphicsRectItem(); // RX's QGraphicsItem
     qreal power; // ! in Watts
+    qreal gain;
     qulonglong bitrate_Mbps; // bitrate in Mbps
     qreal Ra = 73; // antenna resistance
     QColor cell_color = QColor(Qt::transparent); // receiver cell color, based on power/bitrate

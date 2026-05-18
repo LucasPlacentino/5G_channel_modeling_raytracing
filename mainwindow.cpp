@@ -8,17 +8,18 @@
 #include <QDir>
 
 #include "simulation.h"
-//#include "validation.h"
+//#include "validation.h" // old_validation
 #include "validation_free_space.h"
 #include "validation_single_reflection.h"
 #include "validation_double_reflection.h"
+#include "validation_triple_reflection.h"
 QGraphicsView* Validation_view;
 
 Simulation simulation = Simulation(); // The global simulation object, use `extern Simulation simulation;` in other files?
 
 int currentEditingBaseStation_index = 0; // The base station that is currently selected for user edit
 
-QList<qreal> resolutions = {0.5, 0.25, 0.125, 0.0625};
+QList<qreal> resolutions = {1.0, 0.5, 0.25, 0.125, 0.0625};
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -382,5 +383,11 @@ void MainWindow::on_actionRun_Single_Reflection_Validation_triggered()
 void MainWindow::on_actionRun_Double_Reflection_Validation_triggered()
 {
     //Validation_view = runDoubleReflectionValidation();
+}
+
+
+void MainWindow::on_actionRun_Triple_Reflection_Valdiation_triggered()
+{
+    //Validation_view = runTripleReflectionValidation();
 }
 

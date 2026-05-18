@@ -49,6 +49,8 @@ private slots:
 
     void on_actionRun_Double_Reflection_Validation_triggered();
 
+    void on_actionRun_Triple_Reflection_Valdiation_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool runSimulation(QProgressBar* progress_bar);
