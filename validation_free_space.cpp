@@ -9,6 +9,15 @@
 #include "raysegment.h"
 #include "transmitter.h"
 #include "receiver.h"
+#include "obstacle.h"
+#include <QGraphicsScene>
+#include <QGraphicsView>
+#include <QGraphicsLineItem>
+#include <QGraphicsEllipseItem>
+#include <QGraphicsRectItem>
+#include <QPen>
+#include <QBrush>
+#include <QApplication>
 
 /**
  * @file validation_free_space.cpp
@@ -19,6 +28,12 @@
  * 
  * P_RX = P_TX * G_TX * G_RX * (lambda / (4*pi*d))^2
  */
+
+// ============================================================================
+// GLOBAL GRAPHICS OBJECTS
+// ============================================================================
+
+QGraphicsScene* validation_scene = nullptr;
 
 // ============================================================================
 // THEORETICAL CALCULATIONS
@@ -97,6 +112,97 @@ qreal computeSimulatedDirectRayPower(const QVector2D& tx_pos, const QVector2D& r
 }
 
 // ============================================================================
+// GRAPHICS & VISUALIZATION
+// ============================================================================
+
+/**
+ * Create graphics scene with two perpendicular walls
+ */
+QGraphicsScene* createGraphicsSceneWithWalls()
+{
+    QGraphicsScene* scene = new QGraphicsScene();
+    scene->setSceneRect(0, 0, 150, 150); // 15m x 15m scaled up 10x
+
+    // Create and add two perpendicular walls
+    // Wall 1: Horizontal wall at y=5m
+    Obstacle* wall1 = new Obstacle(QVector2D(0, 0), QVector2D(16, 0), GenericWall, 0.4);
+    scene->addItem(wall1->graphics);
+    qDebug() << "Wall 1 created (horizontal): (0,0) to (12,5)";
+
+    // Wall 2: Vertical wall at x=7m  
+    Obstacle* wall2 = new Obstacle(QVector2D(0, 0), QVector2D(0, 12), GenericWall, 0.4);
+    scene->addItem(wall2->graphics);
+    qDebug() << "Wall 2 created (vertical): (0,0) to (0,12)";
+
+    return scene;
+}
+
+/**
+ * Draw transmitter at position
+ */
+void drawTransmitter(QGraphicsScene* scene, const QVector2D& tx_pos, qreal scale = 10.0)
+{
+    QGraphicsEllipseItem* tx_graphics = scene->addEllipse(
+        scale * tx_pos.x() - 3, 
+        scale * tx_pos.y() - 3, 
+        6, 6
+    );
+    QPen tx_pen(Qt::darkGreen);
+    tx_pen.setWidthF(2);
+    tx_graphics->setPen(tx_pen);
+    tx_graphics->setBrush(QBrush(Qt::green));
+    tx_graphics->setToolTip("Transmitter (TX)");
+}
+
+/**
+ * Draw receiver at position
+ */
+void drawReceiver(QGraphicsScene* scene, const QVector2D& rx_pos, qreal scale = 10.0)
+{
+    QGraphicsRectItem* rx_graphics = scene->addRect(
+        scale * rx_pos.x() - 3, 
+        scale * rx_pos.y() - 3, 
+        6, 6
+    );
+    QPen rx_pen(Qt::darkBlue);
+    rx_pen.setWidthF(2);
+    rx_graphics->setPen(rx_pen);
+    rx_graphics->setBrush(QBrush(Qt::blue));
+    rx_graphics->setToolTip("Receiver (RX)");
+}
+
+/**
+ * Draw direct ray path
+ */
+void drawDirectRay(QGraphicsScene* scene, const QVector2D& tx_pos, const QVector2D& rx_pos, qreal scale = 10.0)
+{
+    QGraphicsLineItem* ray_graphics = scene->addLine(
+        scale * tx_pos.x(), 
+        scale * tx_pos.y(),
+        scale * rx_pos.x(), 
+        scale * rx_pos.y()
+    );
+    QPen ray_pen(Qt::red);
+    ray_pen.setWidthF(2);
+    ray_graphics->setPen(ray_pen);
+    ray_graphics->setToolTip("Direct Ray Path");
+}
+
+/**
+ * Create visualization window and display scene
+ */
+void displayVisualization(QGraphicsScene* scene)
+{
+    if (!scene) return;
+
+    QGraphicsView* view = new QGraphicsView(scene);
+    view->setWindowTitle("Free-Space Validation - Ray Visualization");
+    view->setGeometry(100, 100, 800, 800);
+    view->show();
+}
+
+
+// ============================================================================
 // VALIDATION TEST CASES
 // ============================================================================
 
@@ -138,6 +244,13 @@ void testCase_1meter()
     } else {
         qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
     }
+
+    // // Add graphics to scene
+    // if (validation_scene) {
+    //     drawTransmitter(validation_scene, tx_pos);
+    //     drawReceiver(validation_scene, rx_pos);
+    //     drawDirectRay(validation_scene, tx_pos, rx_pos);
+    // }
 }
 
 /**
@@ -177,6 +290,13 @@ void testCase_10meters()
         qDebug() << "✓ PASS: Error within tolerance";
     } else {
         qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
+    }
+
+    // Add graphics to scene
+    if (validation_scene) {
+        drawTransmitter(validation_scene, tx_pos);
+        drawReceiver(validation_scene, rx_pos);
+        drawDirectRay(validation_scene, tx_pos, rx_pos);
     }
 }
 
@@ -218,6 +338,13 @@ void testCase_100meters()
     } else {
         qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
     }
+
+    // // Add graphics to scene
+    // if (validation_scene) {
+    //     drawTransmitter(validation_scene, tx_pos);
+    //     drawReceiver(validation_scene, rx_pos);
+    //     drawDirectRay(validation_scene, tx_pos, rx_pos);
+    // }
 }
 
 
@@ -243,6 +370,11 @@ void runFreeSpaceValidation()
     qDebug() << "  Antenna Resistance:" << 73.0 << "Ohm";
     qDebug() << "  Vacuum Impedance (Z0):" << Z_0 << "Ohm";
     
+    // Create graphics scene with two perpendicular walls
+    validation_scene = createGraphicsSceneWithWalls();
+    qDebug() << "\nGraphics scene created with 2 perpendicular obstacle walls";
+    
+
     // Run all tests
     testCase_1meter();
     testCase_10meters();
@@ -250,4 +382,8 @@ void runFreeSpaceValidation()
     
     qDebug() << "\n════════════════════════════════════════════════════════════";
     qDebug() << "FREE-SPACE VALIDATION COMPLETE\n";
+
+    // Display visualization
+    qDebug() << "\nDisplaying visualization window...";
+    displayVisualization(validation_scene);
 }
