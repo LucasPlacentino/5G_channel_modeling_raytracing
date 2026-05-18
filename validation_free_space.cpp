@@ -212,7 +212,7 @@ QGraphicsView* runFreeSpaceValidation()
     qDebug() << "FREE-SPACE VALIDATION COMPLETE\n";
 
     qDebug() << "\nDisplaying visualization window...";
-    QGraphicsView* view = displayVisualization(validation_scene);
+    QGraphicsView* view = displayVisualization(validation_scene, 0);
 
     return view;
 }

@@ -370,6 +370,6 @@ QGraphicsView* runDoubleReflectionValidation()
     qDebug() << "\n════════════════════════════════════════════════════════════";
     qDebug() << "DOUBLE-REFLECTION VALIDATION COMPLETE\n";
 
-    QGraphicsView* view = displayVisualization(validation_scene);
+    QGraphicsView* view = displayVisualization(validation_scene, 2);
     return view;
 }

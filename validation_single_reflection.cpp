@@ -444,7 +444,7 @@ QGraphicsView* runSingleReflectionValidation()
 
     // Display visualization
     qDebug() << "\nDisplaying visualization window...";
-    QGraphicsView* view = displayVisualization(validation_scene);
+    QGraphicsView* view = displayVisualization(validation_scene, 1);
 
     return view;
 }

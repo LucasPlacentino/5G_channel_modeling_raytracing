@@ -160,7 +160,7 @@ void MainWindow::on_actionReset_triggered()
 void MainWindow::on_actionSee_Github_triggered()
 {
     // User clicked on the menu's "See Github" button
-    QDesktopServices::openUrl(QUrl("https://github.com/LucasPlacentino/5G_channel_modeling_raytracing/blob/main/validation_free_space.cpp", QUrl::TolerantMode));
+    QDesktopServices::openUrl(QUrl("https://github.com/LucasPlacentino/5G_channel_modeling_raytracing", QUrl::TolerantMode));
 }
 
 

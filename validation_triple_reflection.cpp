@@ -407,6 +407,6 @@ QGraphicsView* runTripleReflectionValidation()
     qDebug() << "\n════════════════════════════════════════════════════════════";
     qDebug() << "TRIPLE-REFLECTION VALIDATION COMPLETE\n";
 
-    QGraphicsView* view = displayVisualization(validation_scene);
+    QGraphicsView* view = displayVisualization(validation_scene, 3);
     return view;
 }

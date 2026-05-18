@@ -77,12 +77,16 @@ void addReceiverToScene(QGraphicsScene* scene, Receiver* receiver)
 /**
  * Create and display visualization window
  */
-QGraphicsView* displayVisualization(QGraphicsScene* scene)
+QGraphicsView* displayVisualization(QGraphicsScene* scene, int nb_refl)
 {
     if (!scene) return nullptr;
 
     QGraphicsView* view = new QGraphicsView(scene);
-    view->setWindowTitle("Ray Tracing Validation - Visualization");
+    if (nb_refl == 0) {
+        view->setWindowTitle("Ray Tracing Validation - Free Path - Visualization");
+    } else {
+        view->setWindowTitle("Ray Tracing Validation - " + QString::number(nb_refl) + " Reflections - Visualization");
+    }
     view->setGeometry(scene_offset, scene_offset, 1000 + 4*scene_offset, 700 + 4*scene_offset);
     view->show();
 

@@ -34,6 +34,6 @@ void addReceiverToScene(QGraphicsScene* scene, Receiver* receiver);
 /**
  * Create and display visualization window
  */
-QGraphicsView* displayVisualization(QGraphicsScene* scene);
+QGraphicsView* displayVisualization(QGraphicsScene* scene, int nb_refl);
 
 #endif // VALIDATION_COMMON_H

@@ -737,8 +737,6 @@
     <property name="title">
      <string>Info</string>
     </property>
-    <addaction name="actionMade_by_Lucas_Placentino"/>
-    <addaction name="actionand_Salman_Houdaibi"/>
     <addaction name="actionAbout"/>
     <addaction name="separator"/>
     <addaction name="actionSee_Github"/>
