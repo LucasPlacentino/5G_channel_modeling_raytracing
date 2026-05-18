@@ -240,8 +240,8 @@ void testCase()
     qreal antenna_R = 73.0;
 
     // Create TX and RX objects
-    Transmitter* tx = new Transmitter(10.0, 0.2, 0, "TX_Test");
-    Receiver* rx = new Receiver(3.8, 9.3, 0.5, false);
+    Transmitter* tx = new Transmitter(10.0, 5.2, 0, "TX_Test");
+    Receiver* rx = new Receiver(6.8, 13.3, 0.5, false);
 
     QPointF tx_coord = tx->getCoordinates();
     QPointF rx_coord = rx->toPointF();
@@ -281,7 +281,7 @@ void testCase()
     qDebug() << "Error:" << error_percent << "%";
     
     if (error_percent < 1.0) {
-        qDebug() << "✓ PASS: Error within tolerance";
+        qDebug() << "✓ PASS: Error within tolerance (<1%)";
     } else {
         qDebug() << "✗ FAIL: Error exceeds 1% tolerance";
     }
@@ -331,4 +331,6 @@ void runFreeSpaceValidation()
     // Display visualization
     qDebug() << "\nDisplaying visualization window...";
     displayVisualization(validation_scene);
+
+    // ! memory leak if app is not restarted (close between each simulation run): RX and TX, Walls, scene, and view never freed
 }
