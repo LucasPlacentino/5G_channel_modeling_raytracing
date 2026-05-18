@@ -22,7 +22,7 @@ Simulation simulation = Simulation(); // The global simulation object, use `exte
 
 int currentEditingBaseStation_index = 0; // The base station that is currently selected for user edit
 
-QList<qreal> resolutions = {1.0, 0.5, 0.25, 0.125, 0.0625};
+QList<qreal> resolutions = {1.0, 0.5, 0.25, 0.125};//, 0.0625};
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -32,6 +32,11 @@ MainWindow::MainWindow(QWidget *parent)
     this->setWindowIcon(QIcon(":/assets/icon.png"));
     initFirstBaseStation();
     ui->setupUi(this);
+    ui->baseStationXspinBox->setMaximum(max_x);
+    ui->baseStationYspinBox->setMaximum(max_y);
+    ui->cellXspinBox->setMaximum(max_x);
+    ui->cellYspinBox->setMaximum(max_y);
+
     showFirstBaseStation();
 
     toggleCoverageParametersLayout(true);
@@ -279,7 +284,7 @@ void MainWindow::on_addTransmitterButton_clicked()
 
         int new_item_index = ui->transmitterSelector->findText(new_item_name);
 
-        simulation.baseStations.append(new Transmitter(5,5, new_item_index, new_item_name));
+        simulation.baseStations.append(new Transmitter(initial_BS_x,initial_BS_y, new_item_index, new_item_name));
 
         on_transmitterSelector_activated(new_item_index);
         ui->transmitterSelector->setCurrentIndex(new_item_index);

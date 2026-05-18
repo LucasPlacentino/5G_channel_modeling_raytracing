@@ -26,51 +26,59 @@ void Simulation::createWalls()
         this->obstacles.clear();
     }
 
-    QList<Obstacle*> walls;
+    QList<Obstacle*> boundary_walls;
     ObstacleType generic_material = GenericWall;
-    qreal thickness = 0.4; // 50cm
-    walls.append(new Obstacle(QVector2D(0,0), QVector2D(15,0), generic_material, thickness));
+    qreal thickness = 0.3; // 30cm
+
+    // Top wall
+    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(max_x,0), generic_material, thickness));
+    // Right wall
+    boundary_walls.append(new Obstacle(QVector2D(max_x,0), QVector2D(max_x,max_y), generic_material, thickness));
+    // Bottom wall
+    boundary_walls.append(new Obstacle(QVector2D(0,max_y), QVector2D(max_x,max_y), generic_material, thickness));
+    // Left wall
+    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,max_y), generic_material, thickness));
 
 
-    // Add obstacles:
-    QList<Obstacle*> concrete_walls;
-    ObstacleType concrete = ConcreteWall;
-    thickness = 0.3; // 30cm
-    concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(15,0), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(15,0), QVector2D(15,4), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(7,0), QVector2D(7,4), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,8), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(0,8), QVector2D(6,8), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(4,6), QVector2D(9,6), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(4,6), QVector2D(4,8), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(9,6), QVector2D(9,8), concrete, thickness));
-    concrete_walls.append(new Obstacle(QVector2D(9,8), QVector2D(12,8), concrete, thickness));
+    // // Add obstacles:
+    // QList<Obstacle*> concrete_walls;
+    // ObstacleType concrete = ConcreteWall;
+    // thickness = 0.3; // 30cm
+    // concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(15,0), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(15,0), QVector2D(15,4), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(7,0), QVector2D(7,4), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,8), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(0,8), QVector2D(6,8), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(4,6), QVector2D(9,6), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(4,6), QVector2D(4,8), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(9,6), QVector2D(9,8), concrete, thickness));
+    // concrete_walls.append(new Obstacle(QVector2D(9,8), QVector2D(12,8), concrete, thickness));
 
-    QList<Obstacle*> drywall_walls;
-    ObstacleType drywall = DryWall;
-    thickness=0.1; // 10cm
-    drywall_walls.append(new Obstacle(QVector2D(4,0), QVector2D(4,4), drywall, thickness));
-    drywall_walls.append(new Obstacle(QVector2D(4,4), QVector2D(5,4), drywall, thickness));
-    drywall_walls.append(new Obstacle(QVector2D(6,4), QVector2D(9,4), drywall, thickness));
-    drywall_walls.append(new Obstacle(QVector2D(10,4), QVector2D(11,4), drywall, thickness));
-    drywall_walls.append(new Obstacle(QVector2D(11,0), QVector2D(11,4), drywall, thickness));
-    drywall_walls.append(new Obstacle(QVector2D(0,5), QVector2D(4,5), drywall, thickness));
+    // QList<Obstacle*> drywall_walls;
+    // ObstacleType drywall = DryWall;
+    // thickness=0.1; // 10cm
+    // drywall_walls.append(new Obstacle(QVector2D(4,0), QVector2D(4,4), drywall, thickness));
+    // drywall_walls.append(new Obstacle(QVector2D(4,4), QVector2D(5,4), drywall, thickness));
+    // drywall_walls.append(new Obstacle(QVector2D(6,4), QVector2D(9,4), drywall, thickness));
+    // drywall_walls.append(new Obstacle(QVector2D(10,4), QVector2D(11,4), drywall, thickness));
+    // drywall_walls.append(new Obstacle(QVector2D(11,0), QVector2D(11,4), drywall, thickness));
+    // drywall_walls.append(new Obstacle(QVector2D(0,5), QVector2D(4,5), drywall, thickness));
 
-    thickness=0.05; // 5cm
-    Obstacle* glass_window = new Obstacle(QVector2D(12,8),QVector2D(15,4), Window, thickness); // this one is diagonal
+    // thickness=0.05; // 5cm
+    // Obstacle* glass_window = new Obstacle(QVector2D(12,8),QVector2D(15,4), Window, thickness); // this one is diagonal
 
-    thickness=0.05; // 5cm
-    Obstacle* metal_lift_door = new Obstacle(QVector2D(6,6),QVector2D(6,8), MetalWall, thickness);
+    // thickness=0.05; // 5cm
+    // Obstacle* metal_lift_door = new Obstacle(QVector2D(6,6),QVector2D(6,8), MetalWall, thickness);
 
-    // /!\ The lift is only added to the obstacles if enabled
+    // // /!\ The lift is only added to the obstacles if enabled
     QList<Obstacle*> all_obstacles;
-    all_obstacles.append(concrete_walls);
-    all_obstacles.append(drywall_walls);
-    all_obstacles.append(glass_window);
-    all_obstacles.append(metal_lift_door); // last one is the metal lift door
+    // all_obstacles.append(concrete_walls);
+    // all_obstacles.append(drywall_walls);
+    // all_obstacles.append(glass_window);
+    // all_obstacles.append(metal_lift_door); // last one is the metal lift door
 
     // TODO:
-    //all_obstacles = walls;
+    all_obstacles.append(boundary_walls);
     //this->obstacles = walls;
 
     this->obstacles = all_obstacles;
@@ -99,18 +107,18 @@ void Simulation::run(QProgressBar* progress_bar)
     this->obstacles.clear();
 
     createWalls();
-    if (this->lift_is_on_floor) { // Adds the lift metal walls if set as present
-        qDebug() << "Lift is on this floor.";
+    // if (this->lift_is_on_floor) { // Adds the lift metal walls if set as present
+    //     qDebug() << "Lift is on this floor.";
 
-        QList<Obstacle*> lift_walls;
-        qreal thickness = 0.05; // 5cm
-        lift_walls.append(new Obstacle(QVector2D(4.25,6.25),QVector2D(5.75,6.25), MetalWall, thickness));
-        lift_walls.append(new Obstacle(QVector2D(4.25,6.25),QVector2D(4.25,7.75), MetalWall, thickness));
-        lift_walls.append(new Obstacle(QVector2D(5.75,6.25),QVector2D(5.75,7.75), MetalWall, thickness));
-        lift_walls.append(new Obstacle(QVector2D(4.25,7.75),QVector2D(5.75,7.75), MetalWall, thickness));
+    //     QList<Obstacle*> lift_walls;
+    //     qreal thickness = 0.05; // 5cm
+    //     lift_walls.append(new Obstacle(QVector2D(4.25,6.25),QVector2D(5.75,6.25), MetalWall, thickness));
+    //     lift_walls.append(new Obstacle(QVector2D(4.25,6.25),QVector2D(4.25,7.75), MetalWall, thickness));
+    //     lift_walls.append(new Obstacle(QVector2D(5.75,6.25),QVector2D(5.75,7.75), MetalWall, thickness));
+    //     lift_walls.append(new Obstacle(QVector2D(4.25,7.75),QVector2D(5.75,7.75), MetalWall, thickness));
 
-        this->obstacles.append(lift_walls);
-    }
+    //     this->obstacles.append(lift_walls);
+    // }
 
     if (!this->showRaySingleCell) {
         createCellsMatrix();
@@ -484,8 +492,10 @@ void Simulation::showView()
 
     this->view->setAttribute(Qt::WA_AlwaysShowToolTips); //? maybe necessary ?
 
-    this->view->setFixedSize(990, 720);
-    this->view->scale(6, 6);
+    //this->view->setFixedSize(990, 720);
+    this->view->setFixedSize(1150, 900); // new map
+    //this->view->scale(6, 6);
+    this->view->scale(1.4, 1.4); // new map
     qDebug() << "Showing graphics view";
     //QIcon _icon = QIcon(QDir::currentPath()+"/icon.png");
     //view->setWindowIcon(QIcon("./assets/icon.png"));
@@ -713,7 +723,7 @@ void Simulation::addLegend(QGraphicsScene* scene)
     if (!this->showRaySingleCell) {
 
         QLinearGradient gradient;
-        QRectF rect(6,85,138,10); // gradient rectangle scene coordinates
+        QRectF rect((max_x * 10) / 2.0 - 138.0 / 2.0, (max_y * 10) + 8, 138, 10); // gradient rectangle scene coordinates
         QGraphicsRectItem* gradient_graphics = new QGraphicsRectItem(rect);
 
         gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
@@ -737,40 +747,40 @@ void Simulation::addLegend(QGraphicsScene* scene)
             scene->addItem(small_line);
         }
 
-        // text for minimum of gradient
-        //QGraphicsTextItem* min_text = new QGraphicsTextItem("-90dBm");
+        // text for minimum of gradient (100 Mbps)
+        //QGraphicsTextItem* min_text = new QGraphicsTextItem("-80dBm");
         QGraphicsTextItem* min_text = new QGraphicsTextItem(QString::number(min_bitrate_Mbps)+"Mbps");
         min_text->setPos(rect.bottomLeft().x()-6,rect.bottomLeft().y()+1);
         min_text->setDefaultTextColor(Qt::white);
-        min_text->setScale(0.25);
+        min_text->setScale(0.45);
 
         // text for quarter point (177.8 Mbps)
         qreal quarter_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.25*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
         QGraphicsTextItem* quarter_text = new QGraphicsTextItem(QString::number(quarter_bitrate_Mbps, 'f', 1)+"Mbps");
         quarter_text->setPos(rect.bottomLeft().x()+0.25*rect_width-6,rect.bottomLeft().y()+1);
         quarter_text->setDefaultTextColor(Qt::white);
-        quarter_text->setScale(0.25);
+        quarter_text->setScale(0.45);
 
         // text for middle point (316.2 Mbps)
         qreal middle_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.5*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
         QGraphicsTextItem* middle_text = new QGraphicsTextItem(QString::number(middle_bitrate_Mbps, 'f', 1)+"Mbps");
         middle_text->setPos(rect.bottomLeft().x()+0.5*rect_width-6,rect.bottomLeft().y()+1);
         middle_text->setDefaultTextColor(Qt::white);
-        middle_text->setScale(0.25);
+        middle_text->setScale(0.45);
 
         // text for three-quarters point (562.3 Mbps)
         qreal three_quarters_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.75*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
         QGraphicsTextItem* three_quarters_text = new QGraphicsTextItem(QString::number(three_quarters_bitrate_Mbps, 'f', 1)+"Mbps");
         three_quarters_text->setPos(rect.bottomLeft().x()+0.75*rect_width-6,rect.bottomLeft().y()+1);
         three_quarters_text->setDefaultTextColor(Qt::white);
-        three_quarters_text->setScale(0.25);
+        three_quarters_text->setScale(0.45);
 
-        // text for maximum of gradient
-        //QGraphicsTextItem* max_text = new QGraphicsTextItem("-40dBm");
+        // text for maximum of gradient (1Gbps)
+        //QGraphicsTextItem* max_text = new QGraphicsTextItem("-60dBm");
         QGraphicsTextItem* max_text = new QGraphicsTextItem(QString::number(max_bitrate_Mbps/1000)+"Gbps");
         max_text->setPos(rect.bottomRight().x()-6,rect.bottomRight().y()+1);
         max_text->setDefaultTextColor(Qt::white);
-        max_text->setScale(0.25);
+        max_text->setScale(0.45);
 
         scene->addItem(min_text);
         scene->addItem(quarter_text);
@@ -779,58 +789,59 @@ void Simulation::addLegend(QGraphicsScene* scene)
         scene->addItem(max_text);
     } else {
         QGraphicsTextItem* ray_colors = new QGraphicsTextItem("Green line: Direct ray\nRed line: One-reflection ray\nYellow line: Two-reflections ray\nCyan line: Three-reflections ray");
-        ray_colors->setPos(50,85);
-        ray_colors->setScale(0.2);
+        ray_colors->setPos((max_x * 10) / 2.0 - 30.0, (max_y * 10) + 8);
+        ray_colors->setScale(0.4);
         ray_colors->setDefaultTextColor(Qt::white);
         scene->addItem(ray_colors);
     }
 
     // axes legends :
-    QGraphicsLineItem* x_line = new QGraphicsLineItem(0,-5,15*10,-5);
-    QGraphicsLineItem* y_line = new QGraphicsLineItem(-5,0,-5,8*10);
+    QGraphicsLineItem* x_line = new QGraphicsLineItem(0,-5,max_x*10,-5);
+    QGraphicsLineItem* y_line = new QGraphicsLineItem(-5,0,-5,max_y*10);
     x_line->setPen(legendPen);
     y_line->setPen(legendPen);
     scene->addItem(x_line);
     scene->addItem(y_line);
     QGraphicsTextItem* x_label = new QGraphicsTextItem("x");
-    x_label->setPos(-2.5,-6.8);
-    x_label->setScale(0.15);
+    x_label->setPos(-3.5,-2.8);
+    x_label->setScale(0.35);
     x_label->setDefaultTextColor(Qt::white);
     scene->addItem(x_label);
     QGraphicsTextItem* y_label = new QGraphicsTextItem("y");
-    y_label->setPos(-6,-3.7);
-    y_label->setScale(0.15);
+    y_label->setPos(-10,-1.7);
+    y_label->setScale(0.35);
     y_label->setDefaultTextColor(Qt::white);
     scene->addItem(y_label);
-    for (int x=0; x<=15; x++) {
+    for (int x=0; x<=max_x; x++) { // draw markers x
         QGraphicsLineItem* small_line = new QGraphicsLineItem(0+(x*10),-5,0+(x*10),-6);
         small_line->setPen(legendPen);
         QGraphicsTextItem* x_index = new QGraphicsTextItem(QString::number(x));
-        x_index->setPos(small_line->line().x2()-1.2,small_line->line().y2()-3.5);
-        x_index->setScale(0.15);
+        x_index->setPos(small_line->line().x2()-2.2,small_line->line().y2()-5.5);
+        x_index->setScale(0.25);
         x_index->setDefaultTextColor(Qt::white);
         scene->addItem(small_line);
         scene->addItem(x_index);
     }
     QGraphicsTextItem* x_unit = new QGraphicsTextItem("[m]");
-    x_unit->setPos(-4.8,-6-3.7);
-    x_unit->setScale(0.15);
+    x_unit->setPos(-10.8,-6-3.7);
+    x_unit->setScale(0.25);
     x_unit->setDefaultTextColor(Qt::white);
     scene->addItem(x_unit);
-    for (int y=0; y<=8; y++) {
+    for (int y=0; y<=max_y; y++) { // draw markers y
         QGraphicsLineItem* small_line = new QGraphicsLineItem(-5,0+(y*10),-6,0+(y*10));
         small_line->setPen(legendPen);
         QGraphicsTextItem* y_index = new QGraphicsTextItem(QString::number(y));
-        y_index->setPos(small_line->line().x2()-2.3,small_line->line().y2()-2);
-        y_index->setScale(0.15);
+        y_index->setPos(small_line->line().x2()-3.3,small_line->line().y2()-3);
+        y_index->setScale(0.25);
         y_index->setDefaultTextColor(Qt::white);
         scene->addItem(small_line);
         scene->addItem(y_index);
     }
-    QGraphicsTextItem* y_unit = new QGraphicsTextItem("[m]");
-    y_unit->setPos(-6-3.4,-4.4);
-    y_unit->setScale(0.15);
-    y_unit->setDefaultTextColor(Qt::white);
-    scene->addItem(y_unit);
+    // let's only use one [m] for both axes
+    // QGraphicsTextItem* y_unit = new QGraphicsTextItem("[m]");
+    // y_unit->setPos(-6-3.4,-4.4);
+    // y_unit->setScale(0.25);
+    // y_unit->setDefaultTextColor(Qt::white);
+    // scene->addItem(y_unit);
 
 }

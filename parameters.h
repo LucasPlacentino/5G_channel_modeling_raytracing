@@ -40,10 +40,10 @@ static constexpr qreal min_bitrate_Mbps = 100; // 100 Mbps
 // assume that the UE sensitivity (in dBm) varies linearly with the maximum achievable bit rate when both quantities are expressed in a logarithmic scale
 
 // TODO: change
-static constexpr qreal max_x = 15;
+static constexpr qreal max_x = 80;
 static constexpr qreal min_x = 0;
 static constexpr qreal min_y = 0;
-static constexpr qreal max_y = 8;
+static constexpr qreal max_y = 50;
 // resolution is set in simulation->resolution, user chosen at runtime
 
 static constexpr qreal beta_0 = 2*M_PI*freq/c; // beta
@@ -56,7 +56,7 @@ constexpr qreal P_TX_dBm = 20; // transmitter power in dBm
 static const qreal effective_height = lambda/M_PI; // h_{e\perp} (because halfwave dipole in horizontal plane)
 static constexpr qreal R_a = 73; // antenna resistance : 73 Ohm
 
-static constexpr qreal initial_BS_x = 9.4;
-static constexpr qreal initial_BS_y = 7;
+static constexpr qreal initial_BS_x = 40;
+static constexpr qreal initial_BS_y = 25;
 
 #endif //PARAMETERS_H

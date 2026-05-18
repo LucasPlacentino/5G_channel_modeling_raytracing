@@ -175,19 +175,6 @@
          <number>4</number>
         </property>
         <item>
-         <widget class="QCheckBox" name="liftOnFloorCheckBox">
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>20</height>
-           </size>
-          </property>
-          <property name="text">
-           <string>Lift is present on this floor</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="Line" name="line">
           <property name="frameShadow">
            <enum>QFrame::Shadow::Plain</enum>
@@ -207,6 +194,9 @@
           </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_11">
+            <property name="spacing">
+             <number>4</number>
+            </property>
             <item>
              <widget class="QRadioButton" name="coverageHeatmapRadioButton">
               <property name="text">
@@ -316,7 +306,7 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_9">
                 <property name="spacing">
-                 <number>2</number>
+                 <number>4</number>
                 </property>
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_7">

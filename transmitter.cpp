@@ -41,8 +41,7 @@ qreal Transmitter::getG_TXP_TX() const
 
 void Transmitter::setPower_dBm(int power_dBm)
 {
-    // TODO: correct ?
-    this->power = (10^(power_dBm/10))/1000; // dBm to Watts
+    this->power = pow(10.0, power_dBm / 10.0) / 1000.0; // dBm to Watts
     qDebug() << "setPower:" << this->power << "Watts";
 }
 
