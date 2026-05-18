@@ -1,3 +1,4 @@
+#include "validation_free_space.h"
 #include <cmath>
 #include <iostream>
 #include <iomanip>
@@ -227,7 +228,7 @@ void testCase_100meters()
 /**
  * Run all free-space validation tests
  */
-void runValidationFreeSpace()
+void runFreeSpaceValidation()
 {
     qDebug() << "\n\n";
     qDebug() << "╔════════════════════════════════════════════════════════════╗";

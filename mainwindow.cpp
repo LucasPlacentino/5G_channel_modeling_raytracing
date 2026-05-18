@@ -8,7 +8,10 @@
 #include <QDir>
 
 #include "simulation.h"
-#include "validation.h"
+//#include "validation.h"
+#include "validation_free_space.h"
+#include "validation_single_reflection.h"
+#include "validation_double_reflection.h"
 QGraphicsView* Validation_view;
 
 Simulation simulation = Simulation(); // The global simulation object, use `extern Simulation simulation;` in other files?
@@ -339,10 +342,10 @@ void MainWindow::on_resolutionComboBox_currentIndexChanged(int index)
 }
 
 
-void MainWindow::on_actionRun_Validation_Simulation_triggered()
-{
-    Validation_view = runValidation();
-}
+// void MainWindow::on_actionRun_Validation_Simulation_triggered()
+// {
+//     Validation_view = runValidation();
+// }
 
 
 void MainWindow::on_actionSave_Validation_image_triggered()
@@ -360,3 +363,24 @@ void MainWindow::on_cellYspinBox_valueChanged(double y)
 {
     simulation.singleCellY = y;
 }
+
+void MainWindow::on_actionRun_Free_Space_Validation_triggered()
+{
+    //Validation_view = runFreeSpaceValidation();
+    runFreeSpaceValidation();
+}
+
+
+
+
+void MainWindow::on_actionRun_Single_Reflection_Validation_triggered()
+{
+    //Validation_view = runSingleReflectionValidation();
+}
+
+
+void MainWindow::on_actionRun_Double_Reflection_Validation_triggered()
+{
+    //Validation_view = runDoubleReflectionValidation();
+}
+

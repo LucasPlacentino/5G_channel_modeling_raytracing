@@ -33,6 +33,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         parameters.h
         raysegment.h raysegment.cpp
         resources.qrc
+        validation_single_reflection.h validation_single_reflection.cpp
+        validation_double_reflection.h validation_double_reflection.cpp
         #algorithme.h algorithme.cpp
 
 

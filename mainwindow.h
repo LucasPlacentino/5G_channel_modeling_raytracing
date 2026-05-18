@@ -38,10 +38,16 @@ private slots:
     void on_liftOnFloorCheckBox_clicked(bool checked);
     void on_showCellOutlineCheckBox_toggled(bool checked);
     void on_resolutionComboBox_currentIndexChanged(int index);
-    void on_actionRun_Validation_Simulation_triggered();
+    //void on_actionRun_Validation_Simulation_triggered();
     void on_actionSave_Validation_image_triggered();
     void on_cellXspinBox_valueChanged(double x);
     void on_cellYspinBox_valueChanged(double y);
+
+    void on_actionRun_Free_Space_Validation_triggered();
+
+    void on_actionRun_Single_Reflection_Validation_triggered();
+
+    void on_actionRun_Double_Reflection_Validation_triggered();
 
 private:
     Ui::MainWindow *ui;

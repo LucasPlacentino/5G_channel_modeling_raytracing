@@ -747,7 +747,9 @@
     <property name="title">
      <string>Validation-Simulation</string>
     </property>
-    <addaction name="actionRun_Validation_Simulation"/>
+    <addaction name="actionRun_Free_Space_Validation"/>
+    <addaction name="actionRun_Single_Reflection_Validation"/>
+    <addaction name="actionRun_Double_Reflection_Validation"/>
     <addaction name="actionSave_Validation_image"/>
    </widget>
    <addaction name="menuTest"/>
@@ -802,9 +804,9 @@
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actionRun_Validation_Simulation">
+  <action name="actionRun_Free_Space_Validation">
    <property name="text">
-    <string>Run Validation Simulation</string>
+    <string>Run Free Space Validation</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+T</string>
@@ -813,6 +815,22 @@
   <action name="actionSave_Validation_image">
    <property name="text">
     <string>Save Validation image</string>
+   </property>
+  </action>
+  <action name="actionRun_Single_Reflection_Validation">
+   <property name="text">
+    <string>Run Single Reflection Validation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Y</string>
+   </property>
+  </action>
+  <action name="actionRun_Double_Reflection_Validation">
+   <property name="text">
+    <string>Run Double Reflection Validation</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+U</string>
    </property>
   </action>
  </widget>
