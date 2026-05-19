@@ -20,6 +20,7 @@ public:
 
     int selector_index;
     QString name;
+    qreal coverage_area_sqm = 0.0;
 
     Transmitter(qreal x, qreal y, int selector_index, QString name);
 

@@ -102,10 +102,15 @@ void MainWindow::changeBaseStationPower(qreal value)
     qDebug() << "dBm value:" << value;
     //Transmitter* base_station = simulation.getBaseStation(currentEditingBaseStation_index);
     Transmitter* base_station = simulation.baseStations[currentEditingBaseStation_index];
-    qreal power = pow(10.0, value / 10.0);
-    base_station->power=power;
+
+    //qreal power = pow(10.0, value / 10.0);
+    //base_station->power=power;
+
+    base_station->setPower_dBm(value);
     simulation.baseStations[currentEditingBaseStation_index]->power_dBm=value;
+    
     //base_station->setPower_dBm(value);
+    
     showBaseStationPower(value);
 }
 

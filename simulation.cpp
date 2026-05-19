@@ -141,6 +141,7 @@ void Simulation::run(QProgressBar* progress_bar)
     }
 
     for (Transmitter* tx : std::as_const(this->baseStations)) {
+        tx->coverage_area_sqm = 0.0; // reset
         int i=0;
         for (QList<Receiver*>& cells_line : this->cells){
             // loops over each line
@@ -597,16 +598,36 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
                 //     _rx_power = _pwr;
                 //     _best_tx_id = tx->selector_index;
                 // }
-                if (_best_tx == nullptr || _pwr > _rx_power) {
+                if (_pwr > _rx_power) {
                     _rx_power = _pwr;
                     _best_tx = tx; 
                 }
             }
 
+            qreal _rx_power_dBm = 10.0 * std::log10(_rx_power * 1000.0);
             RX->power = _rx_power;
-            RX->connected_tx = _best_tx; // Save the pointer!
+
+            // Only connect if the power is physically valid
+            if (_rx_power > 0.0) {
+                RX->connected_tx = _best_tx;
+                RX->connected_tx_selector_index = _best_tx ? _best_tx->selector_index : -1;
+            } else {
+                RX->connected_tx = nullptr;
+                RX->connected_tx_selector_index = -1;
+            }
+
+            //RX->connected_tx = _best_tx; // Save the pointer!
             // RX->connected_tx_selector_index = _best_tx_id; // Save the connected BS ID
-            RX->connected_tx_selector_index = _best_tx ? _best_tx->selector_index : -1; // Save the connected BS ID
+            //RX->connected_tx_selector_index = _best_tx ? _best_tx->selector_index : -1; // Save the connected BS ID
+
+            // Coverage Area Calculation:
+            if (_best_tx != nullptr && _rx_power > 0.0) {
+                if (_rx_power_dBm >= min_sensitivity_dBm) {
+                    // area of one square cell is resolution * resolution
+                    qreal cell_area = resolution * resolution;
+                    _best_tx->coverage_area_sqm += cell_area;
+                }
+            }
 
             RX->updateBitrateAndColor();
             QBrush _rxBrush = RX->graphics->brush();
@@ -618,38 +639,50 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
             RX->graphics->setBrush(_rxBrush);
 
             // Draw RX and add its tooltip
-            float _rx_power_dBm = 10*std::log10(RX->power*1000); // TODO: correct ? *1000 because is in Watts and need in mW :
             //qDebug() << "RX power:" << _rx_power << "W," << _rx_power_dBm << "dBm";
             //qDebug() << "RX bitrate:" << RX->bitrate_Mbps << "Mbps";
 
-            qreal bitrate_Mbps = RX->bitrate_Mbps;
-            if (bitrate_Mbps >= 1000) {
-                qreal bitrate_Gbps = bitrate_Mbps/1000;
-                RX->graphics->setToolTip(
-                    //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
-                    QString("Receiver cell:\nx=%1 y=%2\n(Total Coherent Power)\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nConnected BS: %6").arg(
-                        QString::number(RX->x()),
-                        QString::number(RX->y()),
-                        QString::number(_rx_power*1000),
-                        QString::number(_rx_power_dBm,'f',2),
-                        QString::number(bitrate_Gbps,'f',2),
-                        QString::number(RX->connected_tx_selector_index)
-                        ////QString::number(RX->all_rays.first()->coeffsList.length()),
-                        ////QString::number(RX->all_rays.first()->segments.length())
-                        ));
+            if (RX->connected_tx_selector_index != -1) {
+                qreal bitrate_Mbps = RX->bitrate_Mbps;
+                if (bitrate_Mbps >= 1000) {
+                    qreal bitrate_Gbps = bitrate_Mbps/1000;
+                    RX->graphics->setToolTip(
+                        //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
+                        QString("Receiver cell:\nx=%1 y=%2\n(Total Coherent Power)\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nConnected BS: %6").arg(
+                            QString::number(RX->x()),
+                            QString::number(RX->y()),
+                            QString::number(_rx_power*1000),
+                            QString::number(_rx_power_dBm,'f',2),
+                            QString::number(bitrate_Gbps,'f',2),
+                            QString::number(RX->connected_tx_selector_index)
+                            ////QString::number(RX->all_rays.first()->coeffsList.length()),
+                            ////QString::number(RX->all_rays.first()->segments.length())
+                            ));
+                } else {
+                    RX->graphics->setToolTip(
+                        //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
+                        QString("Receiver cell:\nx=%1 y=%2\n(Total Coherent Power)\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps\nConnected BS: %6").arg(
+                            QString::number(RX->x()),
+                            QString::number(RX->y()),
+                            QString::number(_rx_power*1000),
+                            QString::number(_rx_power_dBm,'f',2),
+                            QString::number(bitrate_Mbps),
+                            QString::number(RX->connected_tx_selector_index)
+                            //QString::number(RX->all_rays.first()->coeffsList.length()),
+                            //QString::number(RX->all_rays.first()->segments.length())
+                            )
+                        );
+                }
             } else {
                 RX->graphics->setToolTip(
                     //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
-                    QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Mbps\nConnected BS: %6").arg(
+                    QString("Receiver cell:\nx=%1 y=%2\nDead Zone (Near-Field / No Signal)").arg(
                         QString::number(RX->x()),
-                        QString::number(RX->y()),
-                        QString::number(_rx_power*1000),
-                        QString::number(_rx_power_dBm,'f',2),
-                        QString::number(bitrate_Mbps),
-                        QString::number(RX->connected_tx_selector_index)
+                        QString::number(RX->y())
                         //QString::number(RX->all_rays.first()->coeffsList.length()),
                         //QString::number(RX->all_rays.first()->segments.length())
-                        ));
+                        )
+                    );
             }
             scene->addItem(RX->graphics);
             //qDebug() << "RX.graphics:" << RX->graphics->rect();
@@ -664,16 +697,15 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     }
     qDebug() << "All walls added to scene.";
 
-    // TODO: feature : multiple transmitters ?
-    //for (Transmitter* TX : this->baseStations) {
-    //    // Draw TX and add its tooltip
-    //    TX->graphics->setToolTip(QString("Transmitter\nx=%1 y=%2\nG_TX*P_TX=%3").arg(QString::number(TX->x()),QString::number(TX->y()),QString::number(TX->gain*TX->power)));
-    //    scene->addItem(TX->graphics);
-    //    //qDebug() << "TX.graphics:" << TX->graphics->rect();
-    //}
-
     for (Transmitter* TX : std::as_const(this->baseStations)) {
-        TX->graphics->setToolTip(QString("Transmitter:\nx=%1 y=%2\nGain: %3\nPower: %4W").arg(QString::number(TX->x()),QString::number(TX->y()),QString::number(TX->gain),QString::number(TX->power)));
+        TX->graphics->setToolTip(QString("Transmitter:\nx=%1 y=%2\nGain: %3\nPower: %4W\nCoverage Area: %5 m² (%6\%)")
+            .arg(QString::number(TX->x()))
+            .arg(QString::number(TX->y()))
+            .arg(QString::number(TX->gain))
+            .arg(QString::number(TX->power))
+            .arg(QString::number(TX->coverage_area_sqm))
+            .arg(QString::number(100*(TX->coverage_area_sqm)/(max_x*max_y),'f',2)) // max possible area of map
+        );
         //qDebug() << "TX.graphics:" << TX->graphics->rect();
         scene->addItem(TX->graphics);
         qDebug() << "Transmitter added to scene.";
@@ -855,35 +887,3 @@ void Simulation::addLegend(QGraphicsScene* scene)
 
 }
 
-// new: TDL on cell click
-// bool Simulation::eventFilter(QObject *obj, QEvent *event)
-// {
-//     // Check if the event is a mouse click on your scene
-//     if (obj == this->scene && event->type() == QEvent::GraphicsSceneMousePress) {
-//         QGraphicsSceneMouseEvent *mouseEvent = static_cast<QGraphicsSceneMouseEvent*>(event);
-        
-//         if (mouseEvent->button() == Qt::LeftButton) {
-//             // Find which item was clicked
-//             QGraphicsItem *clickedItem = this->scene->itemAt(mouseEvent->scenePos(), QTransform());
-            
-//             if (clickedItem) {
-//                 // Loop through matrix to match the item to a Receiver
-//                 for (QList<Receiver*> row : this->cells) {
-//                     for (Receiver* rx : row) {
-//                         if (rx->graphics == clickedItem) {
-//                             qDebug() << "Clicked Receiver at" << rx->x() << "," << rx->y();
-                            
-//                             // TODO:
-//                             // TRIGGER TDL LOGIC HERE
-//                             // ...
-
-//                             return true; // Stop event propagation
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//     }
-//     // Pass unhandled events back to base class
-//     return QObject::eventFilter(obj, event);
-// }
