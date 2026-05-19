@@ -20,7 +20,7 @@ void Simulation::createWalls()
     // Delete old obstacles vector objects (avoid memory leak)
     if(!this->obstacles.empty()) {
         // The vector is not empty
-        for(auto ptr : this->obstacles) {
+        for(auto ptr : std::as_const(this->obstacles)) {
             delete ptr;
         }
         this->obstacles.clear();
@@ -108,11 +108,12 @@ void Simulation::run(QProgressBar* progress_bar)
     qDebug() << "frequency:" << freq << "Hz";
     qDebug() << "omega:" << omega << "rad/s";
 
-    //this->cells_matrix.clear();
-    for (QList<Receiver*> cells_line : this->cells) {
+
+    for (QList<Receiver*>& cells_line : this->cells) {
         qDeleteAll(cells_line);
     }
     this->cells.clear();
+
     qDeleteAll(this->obstacles);
     this->obstacles.clear();
 
@@ -121,18 +122,6 @@ void Simulation::run(QProgressBar* progress_bar)
     } else {
         createWalls();
     }
-    // if (this->lift_is_on_floor) { // Adds the lift metal walls if set as present
-    //     qDebug() << "Lift is on this floor.";
-
-    //     QList<Obstacle*> lift_walls;
-    //     qreal thickness = 0.05; // 5cm
-    //     lift_walls.append(new Obstacle(QVector2D(4.25,6.25),QVector2D(5.75,6.25), MetalWall, thickness));
-    //     lift_walls.append(new Obstacle(QVector2D(4.25,6.25),QVector2D(4.25,7.75), MetalWall, thickness));
-    //     lift_walls.append(new Obstacle(QVector2D(5.75,6.25),QVector2D(5.75,7.75), MetalWall, thickness));
-    //     lift_walls.append(new Obstacle(QVector2D(4.25,7.75),QVector2D(5.75,7.75), MetalWall, thickness));
-
-    //     this->obstacles.append(lift_walls);
-    // }
 
     if (!this->showRaySingleCell) {
         createCellsMatrix();
@@ -145,17 +134,14 @@ void Simulation::run(QProgressBar* progress_bar)
         this->cells = {{rx}};
     }
 
-    //Transmitter* base_station = this->baseStations[0]; // TODO: feature : multiple transmitters?
-
-    //if (this->cells_matrix.isEmpty()) {
     if (this->cells.isEmpty()) {
         qWarning("no cells provided (simulation.cells matrix is empty)");
         throw std::exception();
     }
 
-    for (Transmitter* tx : this->baseStations) {
+    for (Transmitter* tx : std::as_const(this->baseStations)) {
         int i=0;
-        for (QList<Receiver*> cells_line : this->cells){
+        for (QList<Receiver*>& cells_line : this->cells){
             // loops over each line
             for (Receiver* cell : cells_line) {
                 computeDirect(cell, *tx, tx->selector_index);
@@ -212,7 +198,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
 
             // 2nd reflection (we always process this if TX and RX are on the same side,
             // even if the 1st reflection was invalid, because the image still exists)
-            for (Obstacle* wall_2 : this->obstacles) {
+            for (Obstacle* wall_2 : std::as_const(this->obstacles)) {
                 if (wall_2 != wall && checkSameSideOfWall(wall_2->normal,_imageTX,*_RX)) {
                     QVector2D _image_imageTX = computeImage(_imageTX,wall_2);
                     QVector2D _P_r_2_last = calculateReflectionPoint(_image_imageTX,*_RX,wall_2);
@@ -248,7 +234,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
                     }
 
                     // 3rd reflection
-                    for (Obstacle* wall_3 : this->obstacles) {
+                    for (Obstacle* wall_3 : std::as_const(this->obstacles)) {
                         if (wall_3 != wall_2 && checkSameSideOfWall(wall_3->normal, _image_imageTX, *_RX)) {
                             QVector2D _image_image_imageTX = computeImage(_image_imageTX, wall_3);
 
@@ -369,8 +355,8 @@ complex<qreal> Simulation::makeTransmission(RaySegment* ray_segment, Obstacle* w
 void Simulation::checkTransmissions(Ray* _ray, QList<Obstacle*> _reflection_walls) {
     // checks for every segment in this ray if they intersect a wall (which isn't a wall already used for a reflection by this ray)
     // if so: adds the Transmission coefficient to this ray's coeffs list
-    for (RaySegment* ray_segment : _ray->segments) {
-        for (Obstacle* wall : this->obstacles) {
+    for (RaySegment* ray_segment : std::as_const(_ray->segments)) {
+        for (Obstacle* wall : std::as_const(this->obstacles)) {
             //qDebug() << "pwall" << &wall;
             if (!_reflection_walls.contains(wall)) { // is NOT reflection wall
                 if (checkRaySegmentIntersectsWall(wall, ray_segment,nullptr)) {
@@ -389,7 +375,7 @@ void Simulation::computeDirect(Receiver* _RX, const QVector2D& _TX, int tx_selec
     // their computed transmission coefficients to the direct ray list of coeffs
     Ray* direct_ray = new Ray(_TX.toPointF(), _RX->toPointF(), tx_selector_index);
     RaySegment* _direct_line = new RaySegment(_RX->x(), _RX->y(), _TX.x(), _TX.y());
-    for (Obstacle* wall : this->obstacles) {
+    for (Obstacle* wall : std::as_const(this->obstacles)) {
         QPointF* intersection_point = nullptr; // not used
         if (checkRaySegmentIntersectsWall(wall, _direct_line, intersection_point)) {
             // transmission through this wall, compute the transmission coeff
@@ -594,19 +580,19 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
 
     //Transmitter* TX = this->baseStations[0];
 
-    for (QList<Receiver*> cells_line : this->cells) {
+    for (QList<Receiver*>& cells_line : this->cells) {
         for (Receiver* RX : cells_line) {
             // compute total power and set it in RX
             qreal _rx_power = 0.0;
             int _best_tx_id = -1;
             
-            for (Transmitter* tx : this->baseStations) {
+            for (Transmitter* tx : std::as_const(this->baseStations)) {
                 qreal _pwr = RX->computeTotalPower(tx);
                 
                 // If it's the first transmitter, or it has higher power, update the best TX
                 if (_best_tx_id == -1 || _pwr > _rx_power) {
                     _rx_power = _pwr;
-                    _best_tx_id = tx->selector_index; // <-- Using your attribute here
+                    _best_tx_id = tx->selector_index;
                 }
             }
 
@@ -663,7 +649,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     qDebug() << "All receiver cells added to scene.";
 
     // Draw all walls in wall_list
-    for (Obstacle* wall : this->obstacles){
+    for (Obstacle* wall : std::as_const(this->obstacles)){
         //qDebug() << "Adding wall to scene...";
         scene->addItem(wall->graphics);
     }
@@ -677,7 +663,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     //    //qDebug() << "TX.graphics:" << TX->graphics->rect();
     //}
 
-    for (Transmitter* TX : this->baseStations) {
+    for (Transmitter* TX : std::as_const(this->baseStations)) {
         TX->graphics->setToolTip(QString("Transmitter:\nx=%1 y=%2\nGain: %3\nPower: %4W").arg(QString::number(TX->x()),QString::number(TX->y()),QString::number(TX->gain),QString::number(TX->power)));
         //qDebug() << "TX.graphics:" << TX->graphics->rect();
         scene->addItem(TX->graphics);
@@ -687,7 +673,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     if (this->showRaySingleCell) {
         // Draw all rays (their segments) from the all_rays list
 
-        for (Ray* ray :this->cells[0][0]->all_rays) {
+        for (Ray* ray : std::as_const(this->cells[0][0]->all_rays)) {
             qDebug() << "Drawing ray";
             for (QGraphicsLineItem* segment_graphics : ray->getSegmentsGraphics()) {
                 scene->addItem(segment_graphics);
@@ -706,7 +692,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
 
         qDebug() << "All rays added to scene.";
 
-        for (QVector2D point : this->singleCellSimReflectionPoints) {
+        for (QVector2D point : std::as_const(this->singleCellSimReflectionPoints)) {
             qreal width = 0.04;
             QGraphicsEllipseItem* reflection_graphics = new QGraphicsEllipseItem(10*(point.x()-width),10*(point.y()-width),2*width*10,2*width*10);
             reflection_graphics->setPen(QPen(Qt::green));
