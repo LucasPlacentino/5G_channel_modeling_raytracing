@@ -249,7 +249,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
             // CHECK IF REFLECTION IS ON THE WALL AND NOT ITS EXTENSION:
             RaySegment* test_segment = new RaySegment(_imageTX.x(),_imageTX.y(),_RX->x(),_RX->y());
             bool valid_1st_reflection = checkRaySegmentIntersectsWall(wall, test_segment);
-            delete test_segment->graphics; // fix memory leak
+            //delete test_segment->graphics; // fix memory leak
             delete test_segment;
 
             if (valid_1st_reflection) {
@@ -283,9 +283,9 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
 
                     bool valid_2nd_reflection = checkRaySegmentIntersectsWall(wall_2, test_segment_1) &&
                                                 checkRaySegmentIntersectsWall(wall,test_segment_2);
-                    delete test_segment_1->graphics; // fix memory leak
+                    //delete test_segment_1->graphics; // fix memory leak
                     delete test_segment_1;
-                    delete test_segment_2->graphics; // fix memory leak
+                    //delete test_segment_2->graphics; // fix memory leak
                     delete test_segment_2;
 
                     if (valid_2nd_reflection) {
@@ -326,11 +326,11 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
                                                         checkRaySegmentIntersectsWall(wall_2, test_segment_3_2) &&
                                                         checkRaySegmentIntersectsWall(wall, test_segment_3_3);
 
-                            delete test_segment_3_1->graphics; // fix memory leak
+                            //delete test_segment_3_1->graphics; // fix memory leak
                             delete test_segment_3_1;
-                            delete test_segment_3_2->graphics; // fix memory leak
+                            //delete test_segment_3_2->graphics; // fix memory leak
                             delete test_segment_3_2;
-                            delete test_segment_3_3->graphics; // fix memory leak
+                            //delete test_segment_3_3->graphics; // fix memory leak
                             delete test_segment_3_3;
 
                             if (valid_3rd_reflection) {
