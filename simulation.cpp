@@ -168,7 +168,7 @@ void Simulation::run(QProgressBar* progress_bar)
         delete this->scene; 
         this->scene = nullptr;
     }
-    
+
     this->timer.start();
     qDebug() << "Simulation::run() - single cell simulation: " << (this->showRaySingleCell); // still TODO: single cell simulation
 
@@ -568,7 +568,7 @@ void Simulation::showView()
     QGraphicsScene* sim_scene = createGraphicsScene();
     this->scene = sim_scene;
     this->view = new QGraphicsView(sim_scene); // create user's view showing the graphics scene
-    //this->view->setAttribute(Qt::WA_DeleteOnClose); // close the view when user clicks on the close button (and not just hide it)
+    this->view->setAttribute(Qt::WA_DeleteOnClose); // close the view when user clicks on the close button (and not just hide it)
 
     this->view->setAttribute(Qt::WA_AlwaysShowToolTips); //? maybe necessary ?
 
