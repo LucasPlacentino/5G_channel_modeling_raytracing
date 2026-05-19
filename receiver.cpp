@@ -324,6 +324,8 @@ void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm)
     axisFont.setPointSize(12); // Larger than default, smaller than main title
     axisX->setTitleFont(axisFont);
     axisX->setLabelsPosition(QCategoryAxis::AxisLabelsPositionOnValue); // Put the label exactly on the line
+    // Add this line to rotate the labels vertically (read from bottom to top)
+    axisX->setLabelsAngle(-90);
 
     // // 1. Process data for the chart and the physics metrics
     // for (int i = 0; i <= max_tap; i++) {
