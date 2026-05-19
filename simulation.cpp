@@ -28,16 +28,74 @@ void Simulation::createWalls()
 
     QList<Obstacle*> boundary_walls;
     ObstacleType generic_material = GenericWall;
-    qreal thickness = 0.3; // 30cm
+    qreal boundary_thickness = 0.3; // 30cm
 
     // Top wall
-    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(max_x,0), generic_material, thickness));
+    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(max_x,0), generic_material, boundary_thickness));
     // Right wall
-    boundary_walls.append(new Obstacle(QVector2D(max_x,0), QVector2D(max_x,max_y), generic_material, thickness));
+    boundary_walls.append(new Obstacle(QVector2D(max_x,0), QVector2D(max_x,max_y), generic_material, boundary_thickness));
     // Bottom wall
-    boundary_walls.append(new Obstacle(QVector2D(0,max_y), QVector2D(max_x,max_y), generic_material, thickness));
+    boundary_walls.append(new Obstacle(QVector2D(0,max_y), QVector2D(max_x,max_y), generic_material, boundary_thickness));
     // Left wall
-    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,max_y), generic_material, thickness));
+    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,max_y), generic_material, boundary_thickness));
+
+
+    // --- Interior Generic Walls (120x70m Layout) ---
+    QList<Obstacle*> interior_walls;
+    qreal interior_thickness = 0.3; // 30cm
+    // We reuse generic_material and thickness (0.3m) from your boundary setup
+    // 1. Top corridor wall (Y=30), broken up by 4m doorways
+    interior_walls.append(new Obstacle(QVector2D(10, 30), QVector2D(28, 30), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(32, 30), QVector2D(68, 30), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(72, 30), QVector2D(110, 30), generic_material, interior_thickness));
+    // 2. Bottom corridor wall (Y=40), broken up by 4m doorways (staggered from top)
+    interior_walls.append(new Obstacle(QVector2D(10, 40), QVector2D(38, 40), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(42, 40), QVector2D(78, 40), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(82, 40), QVector2D(110, 40), generic_material, interior_thickness));
+    // 3. Top vertical dividers (separating the Y=0 to Y=30 region into 3 large zones)
+    interior_walls.append(new Obstacle(QVector2D(30, 0), QVector2D(30, 30), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(70, 0), QVector2D(70, 30), generic_material, interior_thickness));
+    // 4. Bottom vertical dividers (separating the Y=40 to Y=70 region into 3 large zones)
+    interior_walls.append(new Obstacle(QVector2D(40, 40), QVector2D(40, 70), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(80, 40), QVector2D(80, 70), generic_material, interior_thickness));
+    // 5. Central solid block (e.g., concrete elevator core or stairwell) inside the corridor
+    interior_walls.append(new Obstacle(QVector2D(50, 32), QVector2D(60, 32), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(60, 32), QVector2D(60, 38), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(60, 38), QVector2D(50, 38), generic_material, interior_thickness));
+    interior_walls.append(new Obstacle(QVector2D(50, 38), QVector2D(50, 32), generic_material, interior_thickness));
+
+
+    // --- Outdoor Urban Environment (120x70m Layout) ---
+    QList<Obstacle*> urban_walls;
+    ObstacleType building_material = GenericWall; 
+    qreal thickness = 0.5; // 50cm thick exterior concrete walls
+
+    // The layout features a Main Avenue (Y = 30 to 45) and a Cross Street (X = 50 to 70).
+
+    // 1. Building Block 1 (Top-Left): Features a chamfered intersection corner
+    urban_walls.append(new Obstacle(QVector2D(0, 30), QVector2D(45, 30), building_material, thickness)); // South facing
+    urban_walls.append(new Obstacle(QVector2D(45, 30), QVector2D(50, 25), building_material, thickness)); // Chamfered corner
+    urban_walls.append(new Obstacle(QVector2D(50, 25), QVector2D(50, 0), building_material, thickness)); // East facing
+
+    // 2. Building Block 2 (Top-Right): Features a 10m wide, 20m deep alleyway
+    urban_walls.append(new Obstacle(QVector2D(70, 0), QVector2D(70, 30), building_material, thickness)); // West facing
+    urban_walls.append(new Obstacle(QVector2D(70, 30), QVector2D(90, 30), building_material, thickness)); // South facing (left of alley)
+    urban_walls.append(new Obstacle(QVector2D(100, 30), QVector2D(120, 30), building_material, thickness)); // South facing (right of alley)
+    
+    // Alleyway walls
+    urban_walls.append(new Obstacle(QVector2D(90, 30), QVector2D(90, 10), building_material, thickness)); // Alley West wall
+    urban_walls.append(new Obstacle(QVector2D(100, 30), QVector2D(100, 10), building_material, thickness)); // Alley East wall
+    urban_walls.append(new Obstacle(QVector2D(90, 10), QVector2D(100, 10), building_material, thickness)); // Alley back wall
+
+    // 3. Building Block 3 (Bottom-Left): Standard 90-degree block
+    urban_walls.append(new Obstacle(QVector2D(0, 45), QVector2D(50, 45), building_material, thickness)); // North facing
+    urban_walls.append(new Obstacle(QVector2D(50, 45), QVector2D(50, 70), building_material, thickness)); // East facing
+
+    // 4. Building Block 4 (Bottom-Right): Features a recessed corner plaza
+    urban_walls.append(new Obstacle(QVector2D(85, 45), QVector2D(120, 45), building_material, thickness)); // North facing main
+    urban_walls.append(new Obstacle(QVector2D(85, 45), QVector2D(85, 55), building_material, thickness)); // Plaza West boundary
+    urban_walls.append(new Obstacle(QVector2D(70, 55), QVector2D(85, 55), building_material, thickness)); // Plaza North boundary
+    urban_walls.append(new Obstacle(QVector2D(70, 55), QVector2D(70, 70), building_material, thickness)); // West facing main
 
 
     // // Add obstacles:
@@ -72,13 +130,16 @@ void Simulation::createWalls()
 
     // // /!\ The lift is only added to the obstacles if enabled
     QList<Obstacle*> all_obstacles;
+
     // all_obstacles.append(concrete_walls);
     // all_obstacles.append(drywall_walls);
     // all_obstacles.append(glass_window);
     // all_obstacles.append(metal_lift_door); // last one is the metal lift door
 
     // TODO:
-    all_obstacles.append(boundary_walls);
+    //all_obstacles.append(boundary_walls);
+    //all_obstacles.append(interior_walls);
+    all_obstacles.append(urban_walls);
     //this->obstacles = walls;
 
     this->obstacles = all_obstacles;
@@ -92,7 +153,7 @@ void Simulation::createWalls()
 // #endif
 //     // -------------------------------------
 
-    qDebug() << "Walls created";
+    qDebug() << QString::number(this->obstacles.length()) << "Walls created";
 }
 
 void Simulation::run(QProgressBar* progress_bar)

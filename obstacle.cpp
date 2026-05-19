@@ -45,11 +45,11 @@ Obstacle::Obstacle(QVector2D start, QVector2D end, ObstacleType material, qreal 
     //qDebug("Setting Wall graphics line...");
     this->graphics->setLine(graphics_line);
 
-    QPen pen(Qt::gray);
+    QPen pen(Qt::lightGray);
     //pen.setWidthF(10*0.2);
 
     pen.setColor(Qt::lightGray);
-    pen.setWidth(10*0.2);
+    pen.setWidth(40*0.2);
     this->properties.relative_permittivity = epsilon_r; // in parameters.h
     this->properties.conductivity = sigma_cond; // in parameters.h
 
