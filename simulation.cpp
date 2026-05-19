@@ -698,14 +698,16 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     qDebug() << "All walls added to scene.";
 
     for (Transmitter* TX : std::as_const(this->baseStations)) {
-        TX->graphics->setToolTip(QString("Transmitter:\nx=%1 y=%2\nGain: %3\nPower: %4W\nCoverage Area: %5 m² (%6\%)")
-            .arg(QString::number(TX->x()))
-            .arg(QString::number(TX->y()))
-            .arg(QString::number(TX->gain))
-            .arg(QString::number(TX->power))
-            .arg(QString::number(TX->coverage_area_sqm))
-            .arg(QString::number(100*(TX->coverage_area_sqm)/(max_x*max_y),'f',2)) // max possible area of map
-        );
+        TX->graphics->setToolTip(
+            QString("Transmitter:\nx=%1 y=%2\nGain: %3\nPower: %4W\nCoverage Area: %5 m² (%6\%)").arg(
+                QString::number(TX->x()),
+                QString::number(TX->y()),
+                QString::number(TX->gain),
+                QString::number(TX->power),
+                QString::number(TX->coverage_area_sqm),
+                QString::number(100*(TX->coverage_area_sqm)/(max_x*max_y),'f',2) // percentage of max possible area of map
+                )
+            );
         //qDebug() << "TX.graphics:" << TX->graphics->rect();
         scene->addItem(TX->graphics);
         qDebug() << "Transmitter added to scene.";
