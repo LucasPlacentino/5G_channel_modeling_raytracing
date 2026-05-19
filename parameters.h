@@ -41,8 +41,8 @@ static constexpr qreal min_bitrate_Mbps = 100; // 100 Mbps
 // assume that the UE sensitivity (in dBm) varies linearly with the maximum achievable bit rate when both quantities are expressed in a logarithmic scale
 
 // far-field, plane waves, check:
-static constexpr qreal D = 0.1; // max physical dimension of antenna ~= 10cm
-static const qreal far_field_min_distance = qMax(qMax(1.6*lambda,5*D),2*qPow(D,2)/lambda); // exclusion zone for not plane wave (far-field)
+static constexpr qreal D = 0.1; // max physical dimension of antenna e.g. ~= 10cm
+static const qreal far_field_min_distance = qMax(qMax(1.6*lambda,5*D),2*qPow(D,2)/lambda); // r_{ff} border of exclusion zone
 
 // TODO: change
 static constexpr qreal max_x = 80;
