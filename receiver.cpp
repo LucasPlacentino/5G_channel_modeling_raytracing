@@ -4,6 +4,34 @@
 #include <QPen>
 #include "parameters.h"
 
+// new: (for TDL charts)
+#include <QtCharts/QChartView>
+
+//#include <QtCharts/QBarSeries>
+//#include <QtCharts/QBarSet>
+//#include <QtCharts/QBarCategoryAxis>
+
+#include <QtCharts/QScatterSeries>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QLegendMarker>
+#include <QtCharts/QCategoryAxis>
+#include <QFont>
+
+#include <QShortcut>
+#include <QKeySequence>
+#include <QFileDialog>
+#include <QPixmap>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPdfWriter>
+#include <QPainter>
+#include <QPageSize>
+
+//#include <QtCharts/QValueAxis>
+#include <cmath>
+void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm);
+
 /*
  Sensitivity | Bit rate
      -80 dBm | 100 Mb/s (lower: comms impossible)
@@ -223,6 +251,8 @@ void ReceiverCellGraphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
         // ...
         QMap<int, qreal> RX_TDL_pdp = parentReceiver->computeTDL(tx);
 
+        showPDPChartWindow(RX_TDL_pdp);
+
         qDebug() << "--- Power Delay Profile ---";
         for (auto it = RX_TDL_pdp.constBegin(); it != RX_TDL_pdp.constEnd(); ++it) {
             qDebug() << "Tap" << it.key() << "(Delay:" << it.key() * 5 << "ns) : " << it.value() << "dBm";
@@ -232,4 +262,246 @@ void ReceiverCellGraphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
     } else {
         QGraphicsRectItem::mousePressEvent(event); // Pass other clicks (right-click) down
     }
+}
+
+
+// new (for TDL charts):
+void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm) 
+{
+    if (pdp_dBm.isEmpty()) return;
+
+    // QBarSeries *series = new QBarSeries();
+    // QBarSet *powerSet = new QBarSet("Received Power");
+    // QStringList categories;
+
+    // int max_tap = pdp_dBm.lastKey();
+    ////qreal tap_duration_ns = 5.0; // 1 / 200MHz = 5 ns
+    qreal tap_duration_ns = 1 / (B/1e9);
+    
+    // Variables for RMS Delay Spread
+    qreal sum_P = 0.0;
+    qreal sum_P_tau = 0.0;
+    qreal sum_P_tau2 = 0.0;
+    qreal max_power_dBm = -999.0;
+
+    qreal max_delay_ns = 0.0; // ?
+
+    // Series 1: The Dots at the peaks
+    QScatterSeries *scatterSeries = new QScatterSeries();
+    scatterSeries->setName("Multipath Components");
+    scatterSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    scatterSeries->setMarkerSize(8.0);
+    scatterSeries->setColor(Qt::blue);
+
+    // Series 2: The vertical lines (stems) dropping to the floor
+    QLineSeries *stemSeries = new QLineSeries();
+    QPen stemPen(Qt::blue);
+    stemPen.setWidth(2);
+    stemSeries->setPen(stemPen);
+    stemSeries->setName("Stems");
+
+    // NEW: Create the custom Category Axis here
+    QCategoryAxis *axisX = new QCategoryAxis();
+    axisX->setTitleText("Delay (ns)");
+    QFont axisFont;
+    axisFont.setPointSize(12); // Larger than default, smaller than main title
+    axisX->setTitleFont(axisFont);
+    axisX->setLabelsPosition(QCategoryAxis::AxisLabelsPositionOnValue); // Put the label exactly on the line
+
+    // // 1. Process data for the chart and the physics metrics
+    // for (int i = 0; i <= max_tap; i++) {
+    //     qreal delay_ns = i * tap_duration_ns;
+    //     categories << QString::number(delay_ns);
+
+    //     if (pdp_dBm.contains(i)) {
+    //         qreal pwr_dBm = pdp_dBm[i];
+    //         *powerSet << pwr_dBm;
+            
+    //         if (pwr_dBm > max_power_dBm) max_power_dBm = pwr_dBm;
+
+    //         // Convert back to linear mW for RMS math
+    //         qreal P_linear = qPow(10.0, pwr_dBm / 10.0);
+    //         sum_P += P_linear;
+    //         sum_P_tau += P_linear * delay_ns;
+    //         sum_P_tau2 += P_linear * qPow(delay_ns, 2);
+
+    //     } else {
+    //         *powerSet << -120.0; // Noise floor for empty taps
+    //     }
+    // }
+
+    // 1. Process ONLY the taps that actually exist in the map
+    for (auto it = pdp_dBm.constBegin(); it != pdp_dBm.constEnd(); ++it) {
+        int tap = it.key();
+        qreal pwr_dBm = it.value();
+        qreal delay_ns = tap * tap_duration_ns;
+
+        if (pwr_dBm > max_power_dBm) max_power_dBm = pwr_dBm;
+        if (delay_ns > max_delay_ns) max_delay_ns = delay_ns;
+
+        // Convert back to linear mW for RMS math
+        qreal P_linear = std::pow(10.0, pwr_dBm / 10.0); 
+        sum_P += P_linear;
+        sum_P_tau += P_linear * delay_ns;
+        sum_P_tau2 += P_linear * std::pow(delay_ns, 2);
+
+        // Add peak dot to chart
+        scatterSeries->append(delay_ns, pwr_dBm);
+
+        // Draw the vertical stem down to the noise floor (-120 dBm)
+        stemSeries->append(delay_ns, -120.0);
+        stemSeries->append(delay_ns, pwr_dBm);
+        stemSeries->append(delay_ns, -120.0); // Return to floor so it doesn't draw a diagonal line to the next peak
+
+        // NEW: Add a specific marker/label for this exact tap
+        axisX->append(QString::number(delay_ns), delay_ns);
+    }
+
+    // 2. Compute RMS Delay Spread
+    qreal mean_tau = sum_P_tau / sum_P;
+    qreal rms_delay_spread = qSqrt((sum_P_tau2 / sum_P) - qPow(mean_tau, 2));
+
+    // // 3. Build the Chart
+    // series->append(powerSet);
+    // QChart *chart = new QChart();
+    // chart->addSeries(series);
+
+    // 3. Build the Chart
+    QChart *chart = new QChart();
+    chart->addSeries(stemSeries); // Add stem first so it draws behind the dots
+    chart->addSeries(scatterSeries);
+    // Hide the stem legend marker to keep the UI clean
+    const auto markers = chart->legend()->markers(stemSeries);
+    for (QLegendMarker *marker : markers) {
+        marker->setVisible(false);
+    }
+    
+    // Title with Advanced Metrics
+    QString title = QString("Power Delay Profile (RMS Delay Spread: %1 ns)").arg(rms_delay_spread, 0, 'f', 2);
+    chart->setTitle(title);
+    // Increase Chart Title size
+    QFont titleFont = chart->titleFont();
+    titleFont.setPointSize(16); // Adjust size here (e.g., 14, 16, 18)
+    titleFont.setBold(true);
+    chart->setTitleFont(titleFont);
+    chart->setAnimationOptions(QChart::SeriesAnimations);
+
+    // // X-Axis (Delay in ns)
+    // QBarCategoryAxis *axisX = new QBarCategoryAxis();
+    // axisX->append(categories);
+    // axisX->setTitleText("Delay (ns)");
+    // chart->addAxis(axisX, Qt::AlignBottom);
+    // series->attachAxis(axisX);
+
+    // X-Axis (Delay in ns) - Now a continuous ValueAxis
+    // QValueAxis *axisX = new QValueAxis();
+    // axisX->setTitleText("Delay (ns)");
+    // axisX->setRange(0, max_delay_ns + 20.0); // Add a 20ns padding on the right
+    // axisX->setTickCount(10); // Automatically space out the labels nicely
+    // chart->addAxis(axisX, Qt::AlignBottom);
+    // stemSeries->attachAxis(axisX);
+    // scatterSeries->attachAxis(axisX);
+    // X-Axis (Delay in ns) - Now using the CategoryAxis we built in the loop
+    axisX->setRange(0, max_delay_ns + 20.0);
+    chart->addAxis(axisX, Qt::AlignBottom);
+    stemSeries->attachAxis(axisX);
+    scatterSeries->attachAxis(axisX);
+
+    // // Y-Axis (Power in dBm)
+    // QValueAxis *axisY = new QValueAxis();
+    // axisY->setRange(-120.0, max_power_dBm + 5.0); // Dynamic range
+    // axisY->setTitleText("Power (dBm)");
+    // chart->addAxis(axisY, Qt::AlignLeft);
+    // series->attachAxis(axisY);
+
+    // Y-Axis (Power in dBm)
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Power (dBm)");
+    axisY->setTitleFont(axisFont);
+    axisY->setRange(-120.0, max_power_dBm + 5.0); // Dynamic range based on strongest signal
+    chart->addAxis(axisY, Qt::AlignLeft);
+    stemSeries->attachAxis(axisY);
+    scatterSeries->attachAxis(axisY);
+
+    // // 4. Create and Show the Floating Window
+    // QChartView *chartView = new QChartView(chart);
+    // chartView->setRenderHint(QPainter::Antialiasing);
+    // chartView->setWindowTitle("TDL Impulse Response");
+    // chartView->resize(800, 400);
+    //
+    // // Crucial: delete the window from memory when the user closes it
+    // chartView->setAttribute(Qt::WA_DeleteOnClose);
+
+    // 4. Create the Chart View
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    // 5. Create a Wrapper Window with a Layout
+    QWidget *window = new QWidget();
+    window->setWindowTitle("TDL Impulse Response");
+    window->resize(850, 500);
+    window->setAttribute(Qt::WA_DeleteOnClose);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(window);
+    mainLayout->addWidget(chartView, 1);
+
+    // 6. Create the Export Buttons
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    QPushButton *btnSavePng = new QPushButton("Save as PNG");
+    //QPushButton *btnSavePdf = new QPushButton("Save as PDF");
+
+    btnSavePng->setMinimumHeight(30);
+    //btnSavePdf->setMinimumHeight(30);
+
+    buttonLayout->addWidget(btnSavePng);
+    //buttonLayout->addWidget(btnSavePdf);
+    buttonLayout->addStretch();
+
+    mainLayout->addLayout(buttonLayout);
+
+    // 7. Connect Button Clicks to Save Functions
+    QObject::connect(btnSavePng, &QPushButton::clicked, [window, chartView]() {
+        QString fileName = QFileDialog::getSaveFileName(window, "Save Chart as Image", "", "PNG Image (*.png)");
+        if (!fileName.isEmpty()) {
+            QPixmap pixmap = chartView->grab();
+            pixmap.save(fileName);
+        }
+    });
+
+    // QObject::connect(btnSavePdf, &QPushButton::clicked, [window, chartView]() {
+    //     QString fileName = QFileDialog::getSaveFileName(window, "Save Chart as PDF", "", "PDF Document (*.pdf)");
+    //     if (!fileName.isEmpty()) {
+    //         QPdfWriter writer(fileName);
+    //         writer.setCreator("5G Channel Ray Tracer");
+    //         writer.setPageSize(QPageSize(QPageSize::A4));
+    //         writer.setPageOrientation(QPageLayout::Landscape);
+    //
+    //         QPainter painter(&writer);
+    //         chartView->render(&painter);
+    //         painter.end();
+    //     }
+    // });
+
+    // --- Add Keyboard Shortcut (Ctrl+S) ---
+    QShortcut *saveShortcut = new QShortcut(QKeySequence::Save, window); // Automatically maps to Ctrl+S
+
+    QObject::connect(saveShortcut, &QShortcut::activated, [window, chartView]() {
+        QString fileName = QFileDialog::getSaveFileName(
+            window,
+            "Save Chart as Image",
+            QDir::currentPath(),
+            "PNG Image (*.png);;JPEG (*.jpg)"
+            );
+
+        if (!fileName.isEmpty()) {
+            bool success = chartView->grab().save(fileName);
+            if (success) {
+                qDebug() << "Chart successfully saved to:" << fileName;
+            }
+        }
+    });
+    
+    // Show the window independently of the main thread blocking
+    //chartView->show();
+    window->show();
 }

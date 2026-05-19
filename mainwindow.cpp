@@ -182,24 +182,54 @@ void MainWindow::on_actionAbout_triggered()
                           "<br>By Lucas Placentino, 2026"));
 }
 
-void MainWindow::saveImage(QGraphicsView* view = simulation.view, bool isValidation = false)
+void MainWindow::saveImage(QGraphicsView* target_view, bool isValidation)
 {
-    QSize size = view->scene()->sceneRect().size().toSize()*10; // get the Scene size
-    //QImage img(size, QImage::Format_ARGB32); // scene's size, Format_RGBA64 ?
-    QImage img(size, QImage::Format_RGBA64);
+    // Resolve default argument
+    if (target_view == nullptr) {
+        target_view = simulation.view;
+    }
+
+    if (!target_view || !target_view->scene()) {
+        qWarning() << "No view or scene available to save!";
+        return;
+    }
+
+    // 1. Ask for file location FIRST
+    QString img_filename = QFileDialog::getSaveFileName(
+        this,
+        tr("Save Simulation Image"),
+        QDir::currentPath(),
+        "PNG (*.png);;BMP Files (*.bmp);;JPEG (*.jpg)"
+        );
+
+    if (img_filename.isEmpty()) {
+        qInfo() << "Save Cancelled";
+        return; // Abort before wasting CPU
+    }
+
+    // 2. Setup Image (Format_ARGB32_Premultiplied is much faster for Qt drawing than RGBA64)
+    QGraphicsScene* scene = target_view->scene();
+    QSize size = scene->sceneRect().size().toSize() * 10;
+    QImage img(size, QImage::Format_ARGB32_Premultiplied);
+
+    // 3. Clear the garbage memory!
+    img.fill(Qt::black); // Use black since your UI uses a black background
+
+    // 4. Paint the SCENE, not the view
     QPainter painter(&img);
     painter.setRenderHint(QPainter::Antialiasing);
-    // renderscene() //&painter //? scene->render(&painter);
-    view->render(&painter);
 
-    QString img_filename= QFileDialog::getSaveFileName(
-        this,
-        tr("Save Image"),
-        QDir::currentPath(),
-        "PNG (*.png);;BMP Files (*.bmp);;JPEG (*.JPEG)"
-        );
+    // Pass the target rect (the image) and source rect (the scene) to ensure perfect scaling
+    scene->render(&painter, QRectF(img.rect()), scene->sceneRect());
+    painter.end(); // Always end the painter before saving
+
+    // 5. Save
     bool success = img.save(img_filename);
-    success? qInfo("Image saved") : qInfo("Cancelled");
+    if (success) {
+        qInfo() << "Image successfully saved to:" << img_filename;
+    } else {
+        qWarning() << "Failed to save image!";
+    }
 }
 
 void MainWindow::on_actionSave_image_triggered()

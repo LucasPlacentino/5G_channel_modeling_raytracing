@@ -626,7 +626,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
                 qreal bitrate_Gbps = bitrate_Mbps/1000;
                 RX->graphics->setToolTip(
                     //QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nDirect ray (%7 segments) coeffs list length: %6").arg(
-                    QString("Receiver cell:\nx=%1 y=%2\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nConnected BS: %6").arg(
+                    QString("Receiver cell:\nx=%1 y=%2\n(Total Coherent Power)\nPower: %3 mW | %4 dBm\nBitrate: %5 Gbps\nConnected BS: %6").arg(
                         QString::number(RX->x()),
                         QString::number(RX->y()),
                         QString::number(_rx_power*1000),
