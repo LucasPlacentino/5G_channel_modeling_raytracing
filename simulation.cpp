@@ -577,6 +577,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     qDebug() << "Creating graphics scene...";
 
     QGraphicsScene* scene = new QGraphicsScene();
+    //scene->installEventFilter(this); // new: TDL on cell click
 
     //Transmitter* TX = this->baseStations[0];
 
@@ -584,20 +585,27 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
         for (Receiver* RX : cells_line) {
             // compute total power and set it in RX
             qreal _rx_power = 0.0;
-            int _best_tx_id = -1;
+            //int _best_tx_id = -1;
+            Transmitter* _best_tx = nullptr;
             
             for (Transmitter* tx : std::as_const(this->baseStations)) {
                 qreal _pwr = RX->computeTotalPower(tx);
                 
                 // If it's the first transmitter, or it has higher power, update the best TX
-                if (_best_tx_id == -1 || _pwr > _rx_power) {
+                // if (_best_tx_id == -1 || _pwr > _rx_power) {
+                //     _rx_power = _pwr;
+                //     _best_tx_id = tx->selector_index;
+                // }
+                if (_best_tx == nullptr || _pwr > _rx_power) {
                     _rx_power = _pwr;
-                    _best_tx_id = tx->selector_index;
+                    _best_tx = tx; 
                 }
             }
 
             RX->power = _rx_power;
-            RX->connected_tx_selector_index = _best_tx_id; // Save the connected BS ID
+            RX->connected_tx = _best_tx; // Save the pointer!
+            // RX->connected_tx_selector_index = _best_tx_id; // Save the connected BS ID
+            RX->connected_tx_selector_index = _best_tx ? _best_tx->selector_index : -1; // Save the connected BS ID
 
             RX->updateBitrateAndColor();
             QBrush _rxBrush = RX->graphics->brush();
@@ -845,3 +853,36 @@ void Simulation::addLegend(QGraphicsScene* scene)
     // scene->addItem(y_unit);
 
 }
+
+// new: TDL on cell click
+// bool Simulation::eventFilter(QObject *obj, QEvent *event)
+// {
+//     // Check if the event is a mouse click on your scene
+//     if (obj == this->scene && event->type() == QEvent::GraphicsSceneMousePress) {
+//         QGraphicsSceneMouseEvent *mouseEvent = static_cast<QGraphicsSceneMouseEvent*>(event);
+        
+//         if (mouseEvent->button() == Qt::LeftButton) {
+//             // Find which item was clicked
+//             QGraphicsItem *clickedItem = this->scene->itemAt(mouseEvent->scenePos(), QTransform());
+            
+//             if (clickedItem) {
+//                 // Loop through matrix to match the item to a Receiver
+//                 for (QList<Receiver*> row : this->cells) {
+//                     for (Receiver* rx : row) {
+//                         if (rx->graphics == clickedItem) {
+//                             qDebug() << "Clicked Receiver at" << rx->x() << "," << rx->y();
+                            
+//                             // TODO:
+//                             // TRIGGER TDL LOGIC HERE
+//                             // ...
+
+//                             return true; // Stop event propagation
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     // Pass unhandled events back to base class
+//     return QObject::eventFilter(obj, event);
+// }

@@ -10,8 +10,14 @@
 #include "receiver.h"
 #include "transmitter.h"
 
-class Simulation
-{
+// new: for TDL on cell click
+#include <QObject>
+#include <QEvent>
+#include <QGraphicsSceneMouseEvent>
+
+// class Simulation: public QObject {
+//     Q_OBJECT // Required macro for Qt event system
+class Simulation {
 public:
     Simulation(bool show = true); // constructor
     bool ran = false;
@@ -33,7 +39,7 @@ public:
 
     bool lift_is_on_floor = false;
     bool show_cell_outline = false;
-    int max_ray_reflections = 2; // TODO: 3 reflections
+    int max_ray_reflections = 3; // TODO: 3 reflections
     bool showRaySingleCell = false;
     bool remove_all_walls = false;
 
@@ -71,6 +77,10 @@ private:
 
     void showView();
     void addLegend(QGraphicsScene* scene);
+
+// new: for TDL on cell click
+// protected:
+//     bool eventFilter(QObject *obj, QEvent *event) override;
 };
 
 #endif // SIMULATION_H

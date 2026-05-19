@@ -28,6 +28,9 @@ Receiver::Receiver(qreal x, qreal y, qreal resolution, bool showOutline) {
         rxPen.setWidth(0);
     }
 
+    // Initialize the custom graphics item and pass 'this' receiver to it
+    this->graphics = new ReceiverCellGraphics(this);
+
     this->setX(x);
     this->setY(y);
     this->graphics->setToolTip(QString("Receiver x=%1 y=%2").arg(this->x(),this->y()));
@@ -128,7 +131,7 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
     // Get the coordinates of this specific transmitter
     QPointF tx_pos(transmitter->x(), transmitter->y());
 
-    for (Ray* ray : this->all_rays) {
+    for (Ray* ray : std::as_const(this->all_rays)) {
 
         // FILTER: Only add E-fields of rays that belong to THIS transmitter.
         if (ray->tx_selector_index != transmitter->selector_index) {
@@ -136,7 +139,7 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
         }
 
         complex<qreal> ray_coeff(1, 0);
-        for (complex<qreal> coeff : ray->coeffsList) {
+        for (complex<qreal> coeff : std::as_const(ray->coeffsList)) {
             ray_coeff *= coeff; // Product of all Gamma_m and T_m for this ray
         }
 
@@ -165,7 +168,7 @@ QMap<int, qreal> Receiver::computeTDL(Transmitter* transmitter)
     qreal tap_distance_resolution = double(c) / B; // 1.5 meters
 
     // 1. Bin rays into taps
-    for (Ray* ray : this->all_rays) {
+    for (Ray* ray : std::as_const(this->all_rays)) {
         if (ray->tx_selector_index != transmitter->selector_index) {
             continue;
         }
@@ -176,7 +179,7 @@ QMap<int, qreal> Receiver::computeTDL(Transmitter* transmitter)
         int tap_index = qFloor(d/tap_distance_resolution);
 
         complex<qreal> ray_coeff(1, 0);
-        for (complex<qreal> coeff : ray->coeffsList) {
+        for (complex<qreal> coeff : std::as_const(ray->coeffsList)) {
             ray_coeff *= coeff;
         }
 
@@ -201,4 +204,32 @@ QMap<int, qreal> Receiver::computeTDL(Transmitter* transmitter)
     }
 
     return power_delay_profile; // Key: Tap Index, Value: Power in dBm
+}
+
+void ReceiverCellGraphics::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        qDebug() << "Clicked cell at" << parentReceiver->x() << "," << parentReceiver->y();
+
+        Transmitter* tx = parentReceiver->connected_tx;
+        if (tx == nullptr) {
+            qDebug() << "Cell has no connected base station (Dead zone).";
+            event->accept();
+            return;
+        }
+
+        // TODO:
+        // TRIGGER TDL LOGIC HERE:
+        // ...
+        QMap<int, qreal> RX_TDL_pdp = parentReceiver->computeTDL(tx);
+
+        qDebug() << "--- Power Delay Profile ---";
+        for (auto it = RX_TDL_pdp.constBegin(); it != RX_TDL_pdp.constEnd(); ++it) {
+            qDebug() << "Tap" << it.key() << "(Delay:" << it.key() * 5 << "ns) : " << it.value() << "dBm";
+        }
+
+        event->accept(); // Tell Qt this click was handled
+    } else {
+        QGraphicsRectItem::mousePressEvent(event); // Pass other clicks (right-click) down
+    }
 }

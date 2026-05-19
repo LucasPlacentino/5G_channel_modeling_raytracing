@@ -9,13 +9,32 @@
 
 #include <QMap> // new
 
+#include <QGraphicsSceneMouseEvent> // Required for mouse click events
+
+class Receiver; // Forward declaration
+
+
+// Custom graphics item to handle clicks
+class ReceiverCellGraphics : public QGraphicsRectItem {
+public:
+    Receiver* parentReceiver;
+    ReceiverCellGraphics(Receiver* parent) : parentReceiver(parent) {}
+    
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+};
+
+
 class Receiver : public QVector2D // each cell of the simulation grid acts like a receiver
 {
 public:
 
     Receiver(qreal x, qreal y, qreal resolution, bool showOutline = false);
 
-    QGraphicsRectItem* graphics = new QGraphicsRectItem(); // RX's QGraphicsItem
+    //QGraphicsRectItem* graphics = new QGraphicsRectItem(); // RX's QGraphicsItem
+    // It must be initialized in receiver.cpp
+    QGraphicsRectItem* graphics; // RX's QGraphicsItem
+    
     qreal power; // ! in Watts
     qreal gain;
     qulonglong bitrate_Mbps; // bitrate in Mbps
@@ -24,6 +43,7 @@ public:
 
     // Add this to your public variables in receiver.h
     int connected_tx_selector_index = -1; // new
+    Transmitter* connected_tx = nullptr; // new
 
     QList<Ray*> all_rays; // list of all rays that go to this receiver
 
