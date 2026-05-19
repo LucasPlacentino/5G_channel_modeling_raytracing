@@ -7,6 +7,8 @@
 #include <QGraphicsRectItem>
 #include <QVector2D>
 
+#include <QMap> // new
+
 class Receiver : public QVector2D // each cell of the simulation grid acts like a receiver
 {
 public:
@@ -30,6 +32,9 @@ public:
     void updateBitrateAndColor(); // update this receiver's bitrate and cell color
 
     QColor computeColor(qreal value_normalized);
+
+    // new:
+    QMap<int, qreal> computeTDL(Transmitter* transmitter);
 };
 
 #endif // RECEIVER_H

@@ -157,4 +157,48 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
 }
 
 
+// new:
+QMap<int, qreal> Receiver::computeTDL(Transmitter* transmitter)
+{
+    QMap<int, complex<qreal>> complex_taps;
+    qreal E0 = sqrt(60.0 * transmitter->gain * transmitter->power);
+    qreal tap_distance_resolution = double(c) / B; // 1.5 meters
 
+    // 1. Bin rays into taps
+    for (Ray* ray : this->all_rays) {
+        if (ray->tx_selector_index != transmitter->selector_index) {
+            continue; 
+        }
+
+        qreal d = ray->getTotalDistance();
+        
+        // Find which tap this ray falls into based on its distance
+        int tap_index = std::floor(d / tap_distance_resolution);
+
+        complex<qreal> ray_coeff(1, 0);
+        for (complex<qreal> coeff : ray->coeffsList) {
+            ray_coeff *= coeff; 
+        }
+        
+        complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
+        
+        // Add E-field coherently to the existing tap
+        complex_taps[tap_index] += E_ray;
+    }
+
+    // 2. Compute power for each tap
+    QMap<int, qreal> power_delay_profile;
+    qreal h_e = lambda / M_PI; 
+    
+    for (auto it = complex_taps.constBegin(); it != complex_taps.constEnd(); ++it) {
+        int tap = it.key();
+        complex<qreal> E_tot_tap = it.value();
+        
+        qreal tap_power = (1.0 / (8.0 * Ra)) * pow(abs(h_e * E_tot_tap), 2);
+        
+        // Store as dBm for plotting
+        power_delay_profile[tap] = 10.0 * std::log10(tap_power * 1000.0);
+    }
+
+    return power_delay_profile; // Key: Tap Index, Value: Power in dBm
+}
