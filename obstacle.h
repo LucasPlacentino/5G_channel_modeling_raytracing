@@ -49,6 +49,8 @@ public:
     qreal thickness; // in meters
 
     ObstacleType getMaterial();
+
+    ~Obstacle(); // destructor to avoid memory leaks
 };
 
 #endif // OBSTACLE_H

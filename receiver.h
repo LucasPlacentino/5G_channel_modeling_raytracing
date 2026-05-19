@@ -55,6 +55,8 @@ public:
 
     // new:
     QMap<int, qreal> computeTDL(Transmitter* transmitter);
+
+    ~Receiver(); // destructor to avoid memory leaks
 };
 
 #endif // RECEIVER_H

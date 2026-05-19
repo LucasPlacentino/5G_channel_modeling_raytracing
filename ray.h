@@ -27,6 +27,8 @@ public:
     QList<QGraphicsLineItem*> getSegmentsGraphics();
 
     qreal getTotalDistance();
+
+    ~Ray(); // destructor to avoid memory leaks
 };
 
 #endif // RAY_H

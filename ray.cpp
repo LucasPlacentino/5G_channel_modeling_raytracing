@@ -10,6 +10,14 @@ Ray::Ray(QPointF start, QPointF end, int tx_selector_index) {
     this->tx_selector_index=tx_selector_index;
 }
 
+Ray::~Ray() {
+    // Ray destructor to avoid memory leaks
+    // for (RaySegment* segment : std::as_const(this->segments)) {
+    //     delete segment;
+    // }
+    qDeleteAll(this->segments);
+}
+
 void Ray::addCoeff(complex<qreal> coeff) {
     // add a Transmission or Reflection coefficient to this ray's list of coeffs
     //qDebug() << "Adding coeff to ray:" << coeff_module;
@@ -32,7 +40,7 @@ qreal Ray::getTotalCoeffs() {
     //qDebug() << distance_ray;
     qreal res = 1;
     complex<qreal> res_q = 1;
-    for (complex<qreal> coeff : this->coeffsList) {
+    for (complex<qreal> coeff : std::as_const(this->coeffsList)) {
         res_q*=coeff; // all coeffs
     }
     res = pow(abs(res_q),2);
@@ -71,7 +79,7 @@ QList<QGraphicsLineItem*> Ray::getSegmentsGraphics(){
         break;
     }
     QList<QGraphicsLineItem*> ray_graphics;
-    for (RaySegment* ray_segment: this->segments) {
+    for (RaySegment* ray_segment : std::as_const(this->segments)) {
         //for (int i=0; i<this->segments.length(); i++) {
         //qDebug() << "Adding this segment to list ray_graphics";
         ray_segment->graphics->setPen(ray_pen);

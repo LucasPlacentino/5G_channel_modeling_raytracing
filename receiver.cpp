@@ -67,6 +67,13 @@ Receiver::Receiver(qreal x, qreal y, qreal resolution, bool showOutline) {
     this->graphics->setRect(10*(x-resolution/2),10*(y-resolution/2),10*resolution,10*resolution);
     this->graphics->setAcceptHoverEvents(true);
 }
+
+Receiver::~Receiver() {
+    // Receiver destructor to avoid memory leaks
+    qDeleteAll(this->all_rays);
+    delete this->graphics;
+}
+
 void Receiver::updateBitrateAndColor()
 {
     qreal bitrate;

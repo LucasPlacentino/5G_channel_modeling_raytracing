@@ -26,43 +26,43 @@ void Simulation::createWalls()
         this->obstacles.clear();
     }
 
-    QList<Obstacle*> boundary_walls;
-    ObstacleType generic_material = GenericWall;
-    qreal boundary_thickness = 0.3; // 30cm
+    // QList<Obstacle*> boundary_walls;
+    // ObstacleType generic_material = GenericWall;
+    // qreal boundary_thickness = 0.3; // 30cm
 
-    // Top wall
-    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(max_x,0), generic_material, boundary_thickness));
-    // Right wall
-    boundary_walls.append(new Obstacle(QVector2D(max_x,0), QVector2D(max_x,max_y), generic_material, boundary_thickness));
-    // Bottom wall
-    boundary_walls.append(new Obstacle(QVector2D(0,max_y), QVector2D(max_x,max_y), generic_material, boundary_thickness));
-    // Left wall
-    boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,max_y), generic_material, boundary_thickness));
+    // // Top wall
+    // boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(max_x,0), generic_material, boundary_thickness));
+    // // Right wall
+    // boundary_walls.append(new Obstacle(QVector2D(max_x,0), QVector2D(max_x,max_y), generic_material, boundary_thickness));
+    // // Bottom wall
+    // boundary_walls.append(new Obstacle(QVector2D(0,max_y), QVector2D(max_x,max_y), generic_material, boundary_thickness));
+    // // Left wall
+    // boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,max_y), generic_material, boundary_thickness));
 
 
-    // --- Interior Generic Walls (120x70m Layout) ---
-    QList<Obstacle*> interior_walls;
-    qreal interior_thickness = 0.3; // 30cm
-    // We reuse generic_material and thickness (0.3m) from your boundary setup
-    // 1. Top corridor wall (Y=30), broken up by 4m doorways
-    interior_walls.append(new Obstacle(QVector2D(10, 30), QVector2D(28, 30), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(32, 30), QVector2D(68, 30), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(72, 30), QVector2D(110, 30), generic_material, interior_thickness));
-    // 2. Bottom corridor wall (Y=40), broken up by 4m doorways (staggered from top)
-    interior_walls.append(new Obstacle(QVector2D(10, 40), QVector2D(38, 40), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(42, 40), QVector2D(78, 40), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(82, 40), QVector2D(110, 40), generic_material, interior_thickness));
-    // 3. Top vertical dividers (separating the Y=0 to Y=30 region into 3 large zones)
-    interior_walls.append(new Obstacle(QVector2D(30, 0), QVector2D(30, 30), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(70, 0), QVector2D(70, 30), generic_material, interior_thickness));
-    // 4. Bottom vertical dividers (separating the Y=40 to Y=70 region into 3 large zones)
-    interior_walls.append(new Obstacle(QVector2D(40, 40), QVector2D(40, 70), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(80, 40), QVector2D(80, 70), generic_material, interior_thickness));
-    // 5. Central solid block (e.g., concrete elevator core or stairwell) inside the corridor
-    interior_walls.append(new Obstacle(QVector2D(50, 32), QVector2D(60, 32), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(60, 32), QVector2D(60, 38), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(60, 38), QVector2D(50, 38), generic_material, interior_thickness));
-    interior_walls.append(new Obstacle(QVector2D(50, 38), QVector2D(50, 32), generic_material, interior_thickness));
+    // // --- Interior Generic Walls (120x70m Layout) ---
+    // QList<Obstacle*> interior_walls;
+    // qreal interior_thickness = 0.3; // 30cm
+    // // We reuse generic_material and thickness (0.3m) from your boundary setup
+    // // 1. Top corridor wall (Y=30), broken up by 4m doorways
+    // interior_walls.append(new Obstacle(QVector2D(10, 30), QVector2D(28, 30), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(32, 30), QVector2D(68, 30), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(72, 30), QVector2D(110, 30), generic_material, interior_thickness));
+    // // 2. Bottom corridor wall (Y=40), broken up by 4m doorways (staggered from top)
+    // interior_walls.append(new Obstacle(QVector2D(10, 40), QVector2D(38, 40), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(42, 40), QVector2D(78, 40), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(82, 40), QVector2D(110, 40), generic_material, interior_thickness));
+    // // 3. Top vertical dividers (separating the Y=0 to Y=30 region into 3 large zones)
+    // interior_walls.append(new Obstacle(QVector2D(30, 0), QVector2D(30, 30), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(70, 0), QVector2D(70, 30), generic_material, interior_thickness));
+    // // 4. Bottom vertical dividers (separating the Y=40 to Y=70 region into 3 large zones)
+    // interior_walls.append(new Obstacle(QVector2D(40, 40), QVector2D(40, 70), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(80, 40), QVector2D(80, 70), generic_material, interior_thickness));
+    // // 5. Central solid block (e.g., concrete elevator core or stairwell) inside the corridor
+    // interior_walls.append(new Obstacle(QVector2D(50, 32), QVector2D(60, 32), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(60, 32), QVector2D(60, 38), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(60, 38), QVector2D(50, 38), generic_material, interior_thickness));
+    // interior_walls.append(new Obstacle(QVector2D(50, 38), QVector2D(50, 32), generic_material, interior_thickness));
 
 
     // --- Outdoor Urban Environment (120x70m Layout) ---
@@ -239,6 +239,7 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
             // CHECK IF REFLECTION IS ON THE WALL AND NOT ITS EXTENSION:
             RaySegment* test_segment = new RaySegment(_imageTX.x(),_imageTX.y(),_RX->x(),_RX->y());
             bool valid_1st_reflection = checkRaySegmentIntersectsWall(wall, test_segment);
+            delete test_segment->graphics; // fix memory leak
             delete test_segment;
 
             if (valid_1st_reflection) {
@@ -272,7 +273,9 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
 
                     bool valid_2nd_reflection = checkRaySegmentIntersectsWall(wall_2, test_segment_1) &&
                                                 checkRaySegmentIntersectsWall(wall,test_segment_2);
+                    delete test_segment_1->graphics; // fix memory leak
                     delete test_segment_1;
+                    delete test_segment_2->graphics; // fix memory leak
                     delete test_segment_2;
 
                     if (valid_2nd_reflection) {
@@ -313,8 +316,11 @@ void Simulation::computeReflections(Receiver* _RX, const QVector2D& _TX, int tx_
                                                         checkRaySegmentIntersectsWall(wall_2, test_segment_3_2) &&
                                                         checkRaySegmentIntersectsWall(wall, test_segment_3_3);
 
+                            delete test_segment_3_1->graphics; // fix memory leak
                             delete test_segment_3_1;
+                            delete test_segment_3_2->graphics; // fix memory leak
                             delete test_segment_3_2;
+                            delete test_segment_3_3->graphics; // fix memory leak
                             delete test_segment_3_3;
 
                             if (valid_3rd_reflection) {
@@ -552,6 +558,7 @@ void Simulation::showView()
     QGraphicsScene* sim_scene = createGraphicsScene();
     this->scene = sim_scene;
     this->view = new QGraphicsView(sim_scene); // create user's view showing the graphics scene
+    this->view->setAttribute(Qt::WA_DeleteOnClose); // close the view when user clicks on the close button (and not just hide it)
 
     this->view->setAttribute(Qt::WA_AlwaysShowToolTips); //? maybe necessary ?
 
