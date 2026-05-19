@@ -53,6 +53,8 @@ private slots:
 
     void on_actionRun_Recursive_Validation_triggered();
 
+    void on_removeAllWallsCheckBox_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
     bool runSimulation(QProgressBar* progress_bar);

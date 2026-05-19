@@ -10,7 +10,7 @@ Simulation::Simulation(bool show) {
     // class constructor
     this->show = show;
 
-    createWalls();
+    //// createWalls(); // done in Simulation::run()
 }
 
 void Simulation::createWalls()
@@ -82,6 +82,16 @@ void Simulation::createWalls()
     //this->obstacles = walls;
 
     this->obstacles = all_obstacles;
+
+//     // ------ DEBUG: remove all walls ------
+// #if REMOVE_ALL_WALLS
+//     for(auto ptr : this->obstacles) {
+//         delete ptr;
+//     }
+//     this->obstacles.clear();
+// #endif
+//     // -------------------------------------
+
     qDebug() << "Walls created";
 }
 
@@ -106,7 +116,11 @@ void Simulation::run(QProgressBar* progress_bar)
     qDeleteAll(this->obstacles);
     this->obstacles.clear();
 
-    createWalls();
+    if (this->remove_all_walls) {
+        qDebug() << "Running without any wall";
+    } else {
+        createWalls();
+    }
     // if (this->lift_is_on_floor) { // Adds the lift metal walls if set as present
     //     qDebug() << "Lift is on this floor.";
 
@@ -493,7 +507,7 @@ void Simulation::showView()
     this->view->setAttribute(Qt::WA_AlwaysShowToolTips); //? maybe necessary ?
 
     //this->view->setFixedSize(990, 720);
-    this->view->setFixedSize(1150, 900); // new map
+    this->view->setFixedSize(1200, 900); // new map
     //this->view->scale(6, 6);
     this->view->scale(1.4, 1.4); // new map
     qDebug() << "Showing graphics view";

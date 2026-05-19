@@ -407,3 +407,10 @@ void MainWindow::on_actionRun_Recursive_Validation_triggered()
     //Validation_view = runRecursiveValidation();
 }
 
+
+void MainWindow::on_removeAllWallsCheckBox_toggled(bool checked)
+{
+    simulation.remove_all_walls = checked;
+    qDebug() << "Remove all walls:" << checked;
+}
+

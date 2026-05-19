@@ -35,6 +35,7 @@ public:
     bool show_cell_outline = false;
     int max_ray_reflections = 2; // TODO: 3 reflections
     bool showRaySingleCell = false;
+    bool remove_all_walls = false;
 
     // --- NEW : ---
     QList<Transmitter*> baseStations; // TX list
