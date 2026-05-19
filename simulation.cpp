@@ -158,7 +158,7 @@ void Simulation::createWalls()
 
 void Simulation::run(QProgressBar* progress_bar)
 {
-    // TODO: compute everything
+    // WARNING: CLEAN UP PREVIOUS QT LAYOUTS FIRST before destroying math!
     this->timer.start();
     qDebug() << "Simulation::run() - single cell simulation: " << (this->showRaySingleCell); // still TODO: single cell simulation
 

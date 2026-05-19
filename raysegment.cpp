@@ -9,5 +9,8 @@ RaySegment::RaySegment(qreal start_x, qreal start_y, qreal end_x, qreal end_y) {
 
 RaySegment::~RaySegment() {
     // RaySegment destructor to avoid memory leaks
-    delete this->graphics;
+    // Only delete the graphics if it is NOT managed by a scene
+    if (this->graphics && this->graphics->scene() == nullptr) {
+        delete this->graphics;
+    }
 }

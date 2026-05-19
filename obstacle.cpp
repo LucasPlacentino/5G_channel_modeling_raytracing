@@ -113,7 +113,10 @@ Obstacle::Obstacle(QVector2D start, QVector2D end, ObstacleType material, qreal 
 
 Obstacle::~Obstacle() {
     // Obstacle destructor to avoid memory leaks
-    delete this->graphics;
+    // Only delete the graphics if it is NOT managed by a scene
+    if (this->graphics && this->graphics->scene() == nullptr) {
+        delete this->graphics;
+    }
 }
 
 ObstacleType Obstacle::getMaterial()

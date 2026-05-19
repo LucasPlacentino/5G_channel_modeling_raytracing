@@ -71,7 +71,10 @@ Receiver::Receiver(qreal x, qreal y, qreal resolution, bool showOutline) {
 Receiver::~Receiver() {
     // Receiver destructor to avoid memory leaks
     qDeleteAll(this->all_rays);
-    delete this->graphics;
+    // Only delete the graphics if it is NOT managed by a scene
+    if (this->graphics && this->graphics->scene() == nullptr) {
+        delete this->graphics;
+    }
 }
 
 void Receiver::updateBitrateAndColor()

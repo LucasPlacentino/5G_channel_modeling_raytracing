@@ -23,7 +23,10 @@ Transmitter::Transmitter(qreal x, qreal y, int selector_index, QString name){
 
 Transmitter::~Transmitter() {
     // Transmitter destructor to avoid memory leaks
-    delete this->graphics;
+    // Only delete the graphics if it is NOT managed by a scene
+    if (this->graphics && this->graphics->scene() == nullptr) {
+        delete this->graphics;
+    }
 }
 
 void Transmitter::setGraphicsRect(qreal x,qreal y)

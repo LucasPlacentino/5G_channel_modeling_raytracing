@@ -29,7 +29,7 @@ public:
     qreal power_dBm = P_TX_dBm; // 20dBm
     qreal gain = G_TX; // 1.64 or 1.7 ?
 
-    ~Transmitter(); // destructor to avoid memory leaks
+    //~Transmitter(); // destructor to avoid memory leaks
 
 private:
     void setGraphicsRect(qreal x,qreal y);

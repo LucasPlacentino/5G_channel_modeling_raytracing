@@ -50,7 +50,7 @@ public:
 
     ObstacleType getMaterial();
 
-    ~Obstacle(); // destructor to avoid memory leaks
+    //~Obstacle(); // destructor to avoid memory leaks
 };
 
 #endif // OBSTACLE_H
