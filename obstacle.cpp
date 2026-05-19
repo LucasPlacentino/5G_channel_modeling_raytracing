@@ -111,13 +111,13 @@ Obstacle::Obstacle(QVector2D start, QVector2D end, ObstacleType material, qreal 
     //qDebug() << "gamma_m" << this->properties.gamma_m.real() << "+j" << this->properties.gamma_m.imag();
 }
 
-Obstacle::~Obstacle() {
-    // Obstacle destructor to avoid memory leaks
-    // Only delete the graphics if it is NOT managed by a scene
-    if (this->graphics && this->graphics->scene() == nullptr) {
-        delete this->graphics;
-    }
-}
+// Obstacle::~Obstacle() {
+//     // Obstacle destructor to avoid memory leaks
+//     // Only delete the graphics if it is NOT managed by a scene
+//     if (this->graphics && this->graphics->scene() == nullptr) {
+//         delete this->graphics;
+//     }
+// }
 
 ObstacleType Obstacle::getMaterial()
 {
