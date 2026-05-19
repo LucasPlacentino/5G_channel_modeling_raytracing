@@ -45,10 +45,10 @@ static constexpr qreal D = 0.1; // max physical dimension of antenna e.g. ~= 10c
 static const qreal far_field_min_distance = qMax(qMax(1.6*lambda,5*D),2*qPow(D,2)/lambda); // r_{ff} border of exclusion zone
 
 // TODO: change
-static constexpr qreal max_x = 80;
+static constexpr qreal max_x = 120;
 static constexpr qreal min_x = 0;
 static constexpr qreal min_y = 0;
-static constexpr qreal max_y = 50;
+static constexpr qreal max_y = 70;
 // resolution is set in simulation->resolution, user chosen at runtime
 
 static constexpr qreal beta_0 = 2*M_PI*freq/c; // beta

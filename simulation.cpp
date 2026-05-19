@@ -495,9 +495,10 @@ void Simulation::showView()
     this->view->setAttribute(Qt::WA_AlwaysShowToolTips); //? maybe necessary ?
 
     //this->view->setFixedSize(990, 720);
-    this->view->setFixedSize(1200, 900); // new map
+    int view_width = (max_x+10)*10; int view_height = (max_y+20)*10;
+    this->view->setFixedSize(view_width, view_height); // new map
     //this->view->scale(6, 6);
-    this->view->scale(1.4, 1.4); // new map
+    this->view->scale(1, 1); // new map
     qDebug() << "Showing graphics view";
     //QIcon _icon = QIcon(QDir::currentPath()+"/icon.png");
     //view->setWindowIcon(QIcon("./assets/icon.png"));
@@ -761,12 +762,22 @@ void Simulation::addLegend(QGraphicsScene* scene)
     qDebug() << "Adding legend to scene";
 
     QPen legendPen(Qt::white);
-    legendPen.setWidthF(0.3);
+    legendPen.setWidthF(1.5);
+
+    QFont legendFont;
+    legendFont.setPointSize(13); // Standard readable font size instead of using setScale()
+    QFont smallFont;
+    smallFont.setPointSize(9);
 
     if (!this->showRaySingleCell) {
 
         QLinearGradient gradient;
-        QRectF rect((max_x * 10) / 2.0 - 138.0 / 2.0, (max_y * 10) + 8, 138, 10); // gradient rectangle scene coordinates
+
+        //QRectF rect((max_x * 10) / 2.0 - 138.0 / 2.0, (max_y * 10) + 8, 138, 10); // gradient rectangle scene coordinates
+        qreal bar_width = 600.0;
+        qreal bar_height = 40.0;
+        QRectF rect((max_x * 10) / 2.0 - bar_width / 2.0, (max_y * 10) + 40, bar_width, bar_height);
+
         QGraphicsRectItem* gradient_graphics = new QGraphicsRectItem(rect);
 
         gradient.setCoordinateMode(QGradient::ObjectBoundingMode);
@@ -779,10 +790,10 @@ void Simulation::addLegend(QGraphicsScene* scene)
         gradient.setFinalStop(0.0, 0.0); // end right
 
         QBrush gradientBrush(gradient);
-
         gradient_graphics->setPen(legendPen);
         gradient_graphics->setBrush(gradientBrush);
         scene->addItem(gradient_graphics); // draw gradient rectangle
+
         qreal rect_width = rect.width();
         for (int i=0; i<5; i++) {
             QGraphicsLineItem* small_line = new QGraphicsLineItem(rect.bottomLeft().x()+0.25*i*rect_width,rect.bottomLeft().y(),rect.bottomLeft().x()+0.25*i*rect_width,rect.bottomLeft().y()+2.0);
@@ -790,102 +801,187 @@ void Simulation::addLegend(QGraphicsScene* scene)
             scene->addItem(small_line);
         }
 
-        // text for minimum of gradient (100 Mbps)
-        //QGraphicsTextItem* min_text = new QGraphicsTextItem("-80dBm");
-        QGraphicsTextItem* min_text = new QGraphicsTextItem(QString::number(min_bitrate_Mbps)+"Mbps");
-        min_text->setPos(rect.bottomLeft().x()-6,rect.bottomLeft().y()+1);
-        min_text->setDefaultTextColor(Qt::white);
-        min_text->setScale(0.45);
+        // new: Function to easily add aligned text
+        auto addLegendText = [&](QString text, qreal x, qreal y) {
+            QGraphicsTextItem* t = new QGraphicsTextItem(text);
+            t->setDefaultTextColor(Qt::white);
+            t->setFont(legendFont);
+            // Center the text roughly on the X coordinate
+            t->setPos(x - (t->boundingRect().width() / 2.0), y);
+            scene->addItem(t);
+        };
 
-        // text for quarter point (177.8 Mbps)
+        // // text for minimum of gradient (100 Mbps)
+        // //QGraphicsTextItem* min_text = new QGraphicsTextItem("-80dBm");
+        // QGraphicsTextItem* min_text = new QGraphicsTextItem(QString::number(min_bitrate_Mbps)+"Mbps");
+        // min_text->setPos(rect.bottomLeft().x()-6,rect.bottomLeft().y()+1);
+        // min_text->setDefaultTextColor(Qt::white);
+        // min_text->setScale(0.45);
+
+        // // text for quarter point (177.8 Mbps)
+        // qreal quarter_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.25*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
+        // QGraphicsTextItem* quarter_text = new QGraphicsTextItem(QString::number(quarter_bitrate_Mbps, 'f', 1)+"Mbps");
+        // quarter_text->setPos(rect.bottomLeft().x()+0.25*rect_width-6,rect.bottomLeft().y()+1);
+        // quarter_text->setDefaultTextColor(Qt::white);
+        // quarter_text->setScale(0.45);
+
+        // // text for middle point (316.2 Mbps)
+        // qreal middle_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.5*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
+        // QGraphicsTextItem* middle_text = new QGraphicsTextItem(QString::number(middle_bitrate_Mbps, 'f', 1)+"Mbps");
+        // middle_text->setPos(rect.bottomLeft().x()+0.5*rect_width-6,rect.bottomLeft().y()+1);
+        // middle_text->setDefaultTextColor(Qt::white);
+        // middle_text->setScale(0.45);
+
+        // // text for three-quarters point (562.3 Mbps)
+        // qreal three_quarters_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.75*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
+        // QGraphicsTextItem* three_quarters_text = new QGraphicsTextItem(QString::number(three_quarters_bitrate_Mbps, 'f', 1)+"Mbps");
+        // three_quarters_text->setPos(rect.bottomLeft().x()+0.75*rect_width-6,rect.bottomLeft().y()+1);
+        // three_quarters_text->setDefaultTextColor(Qt::white);
+        // three_quarters_text->setScale(0.45);
+
+        // // text for maximum of gradient (1Gbps)
+        // //QGraphicsTextItem* max_text = new QGraphicsTextItem("-60dBm");
+        // QGraphicsTextItem* max_text = new QGraphicsTextItem(QString::number(max_bitrate_Mbps/1000)+"Gbps");
+        // max_text->setPos(rect.bottomRight().x()-6,rect.bottomRight().y()+1);
+        // max_text->setDefaultTextColor(Qt::white);
+        // max_text->setScale(0.45);
+
+        // scene->addItem(min_text);
+        // scene->addItem(quarter_text);
+        // scene->addItem(middle_text);
+        // scene->addItem(three_quarters_text);
+        // scene->addItem(max_text);
+
+        // Draw small lines and text underneath the gradient
+        for (int i=0; i<5; i++) {
+            qreal x_pos = rect.bottomLeft().x() + 0.25 * i * bar_width;
+            
+            QGraphicsLineItem* small_line = new QGraphicsLineItem(
+                x_pos, rect.bottomLeft().y(), 
+                x_pos, rect.bottomLeft().y() + 8.0);
+            small_line->setPen(legendPen);
+            scene->addItem(small_line);
+        }
+
         qreal quarter_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.25*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
-        QGraphicsTextItem* quarter_text = new QGraphicsTextItem(QString::number(quarter_bitrate_Mbps, 'f', 1)+"Mbps");
-        quarter_text->setPos(rect.bottomLeft().x()+0.25*rect_width-6,rect.bottomLeft().y()+1);
-        quarter_text->setDefaultTextColor(Qt::white);
-        quarter_text->setScale(0.45);
-
-        // text for middle point (316.2 Mbps)
         qreal middle_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.5*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
-        QGraphicsTextItem* middle_text = new QGraphicsTextItem(QString::number(middle_bitrate_Mbps, 'f', 1)+"Mbps");
-        middle_text->setPos(rect.bottomLeft().x()+0.5*rect_width-6,rect.bottomLeft().y()+1);
-        middle_text->setDefaultTextColor(Qt::white);
-        middle_text->setScale(0.45);
-
-        // text for three-quarters point (562.3 Mbps)
         qreal three_quarters_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.75*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
-        QGraphicsTextItem* three_quarters_text = new QGraphicsTextItem(QString::number(three_quarters_bitrate_Mbps, 'f', 1)+"Mbps");
-        three_quarters_text->setPos(rect.bottomLeft().x()+0.75*rect_width-6,rect.bottomLeft().y()+1);
-        three_quarters_text->setDefaultTextColor(Qt::white);
-        three_quarters_text->setScale(0.45);
 
-        // text for maximum of gradient (1Gbps)
-        //QGraphicsTextItem* max_text = new QGraphicsTextItem("-60dBm");
-        QGraphicsTextItem* max_text = new QGraphicsTextItem(QString::number(max_bitrate_Mbps/1000)+"Gbps");
-        max_text->setPos(rect.bottomRight().x()-6,rect.bottomRight().y()+1);
-        max_text->setDefaultTextColor(Qt::white);
-        max_text->setScale(0.45);
+        qreal text_y = rect.bottomLeft().y() + 10.0;
+        addLegendText(QString::number(min_bitrate_Mbps)+" Mbps", rect.bottomLeft().x(), text_y);
+        addLegendText(QString::number(quarter_bitrate_Mbps, 'f', 0)+" Mbps", rect.bottomLeft().x() + 0.25*bar_width, text_y);
+        addLegendText(QString::number(middle_bitrate_Mbps, 'f', 0)+" Mbps", rect.bottomLeft().x() + 0.5*bar_width, text_y);
+        addLegendText(QString::number(three_quarters_bitrate_Mbps, 'f', 0)+" Mbps", rect.bottomLeft().x() + 0.75*bar_width, text_y);
+        addLegendText(QString::number(max_bitrate_Mbps/1000)+" Gbps", rect.bottomRight().x(), text_y);
 
-        scene->addItem(min_text);
-        scene->addItem(quarter_text);
-        scene->addItem(middle_text);
-        scene->addItem(three_quarters_text);
-        scene->addItem(max_text);
     } else {
         QGraphicsTextItem* ray_colors = new QGraphicsTextItem("Green line: Direct ray\nRed line: One-reflection ray\nYellow line: Two-reflections ray\nCyan line: Three-reflections ray");
-        ray_colors->setPos((max_x * 10) / 2.0 - 30.0, (max_y * 10) + 8);
+        ray_colors->setPos((max_x * 10) / 2.0 - 100.0, (max_y * 10) + 20);
         ray_colors->setScale(0.4);
         ray_colors->setDefaultTextColor(Qt::white);
         scene->addItem(ray_colors);
     }
 
     // axes legends :
-    QGraphicsLineItem* x_line = new QGraphicsLineItem(0,-5,max_x*10,-5);
-    QGraphicsLineItem* y_line = new QGraphicsLineItem(-5,0,-5,max_y*10);
+    qreal offset = -15.0; // Push axes slightly further out to fit text
+    QGraphicsLineItem* x_line = new QGraphicsLineItem(0, offset, max_x*10, offset);
+    QGraphicsLineItem* y_line = new QGraphicsLineItem(offset, 0, offset, max_y*10);
     x_line->setPen(legendPen);
     y_line->setPen(legendPen);
     scene->addItem(x_line);
     scene->addItem(y_line);
+
     QGraphicsTextItem* x_label = new QGraphicsTextItem("x");
-    x_label->setPos(-3.5,-2.8);
-    x_label->setScale(0.35);
+    x_label->setPos(-25.0, offset - 30.0);
+    x_label->setFont(legendFont);
     x_label->setDefaultTextColor(Qt::white);
     scene->addItem(x_label);
+
+    QGraphicsTextItem* m_label = new QGraphicsTextItem("[m]");
+    m_label->setPos(offset - 35.0, offset - 20.0);
+    m_label->setFont(smallFont);
+    m_label->setDefaultTextColor(Qt::white);
+    scene->addItem(m_label);
+
     QGraphicsTextItem* y_label = new QGraphicsTextItem("y");
-    y_label->setPos(-10,-1.7);
-    y_label->setScale(0.35);
+    y_label->setPos(offset - 40.0, -20.0);
+    y_label->setFont(legendFont);
     y_label->setDefaultTextColor(Qt::white);
     scene->addItem(y_label);
-    for (int x=0; x<=max_x; x++) { // draw markers x
-        QGraphicsLineItem* small_line = new QGraphicsLineItem(0+(x*10),-5,0+(x*10),-6);
-        small_line->setPen(legendPen);
-        QGraphicsTextItem* x_index = new QGraphicsTextItem(QString::number(x));
-        x_index->setPos(small_line->line().x2()-2.2,small_line->line().y2()-5.5);
-        x_index->setScale(0.25);
-        x_index->setDefaultTextColor(Qt::white);
-        scene->addItem(small_line);
-        scene->addItem(x_index);
+
+    // for (int x=0; x<=max_x; x++) { // draw markers x
+    //     QGraphicsLineItem* small_line = new QGraphicsLineItem(0+(x*10),-5,0+(x*10),-6);
+    //     small_line->setPen(legendPen);
+    //     QGraphicsTextItem* x_index = new QGraphicsTextItem(QString::number(x));
+    //     x_index->setPos(small_line->line().x2()-2.2,small_line->line().y2()-5.5);
+    //     x_index->setScale(0.25);
+    //     x_index->setDefaultTextColor(Qt::white);
+    //     scene->addItem(small_line);
+    //     scene->addItem(x_index);
+    // }
+
+    // X-Axis markers:
+    for (int x = 0; x <= max_x; x++) { 
+        qreal tick_length = 2.0; // Small tick for every 1m
+
+        if (x % 10 == 0) {
+            tick_length = 6.0; // Large tick for every 10m
+        } else if (x % 5 == 0) {
+            tick_length = 4.0; // Medium tick for every 5m
+        }
+
+        // Draw the tick line
+        QGraphicsLineItem* tick_line = new QGraphicsLineItem(x * 10, offset, x * 10, offset - tick_length);
+        tick_line->setPen(legendPen);
+        scene->addItem(tick_line);
+
+        // Only draw the text label if it is a 10m mark
+        if (x % 10 == 0) {
+            QGraphicsTextItem* x_index = new QGraphicsTextItem(QString::number(x));
+            x_index->setFont(smallFont);
+            x_index->setDefaultTextColor(Qt::white);
+            // Center text on the tick
+            x_index->setPos((x * 10) - (x_index->boundingRect().width() / 2.0), offset - 30.0);
+            scene->addItem(x_index);
+        }
     }
-    QGraphicsTextItem* x_unit = new QGraphicsTextItem("[m]");
-    x_unit->setPos(-10.8,-6-3.7);
-    x_unit->setScale(0.25);
-    x_unit->setDefaultTextColor(Qt::white);
-    scene->addItem(x_unit);
-    for (int y=0; y<=max_y; y++) { // draw markers y
-        QGraphicsLineItem* small_line = new QGraphicsLineItem(-5,0+(y*10),-6,0+(y*10));
-        small_line->setPen(legendPen);
-        QGraphicsTextItem* y_index = new QGraphicsTextItem(QString::number(y));
-        y_index->setPos(small_line->line().x2()-3.3,small_line->line().y2()-3);
-        y_index->setScale(0.25);
-        y_index->setDefaultTextColor(Qt::white);
-        scene->addItem(small_line);
-        scene->addItem(y_index);
+    
+    // for (int y=0; y<=max_y; y++) { // draw markers y
+    //     QGraphicsLineItem* small_line = new QGraphicsLineItem(-5,0+(y*10),-6,0+(y*10));
+    //     small_line->setPen(legendPen);
+    //     QGraphicsTextItem* y_index = new QGraphicsTextItem(QString::number(y));
+    //     y_index->setPos(small_line->line().x2()-3.3,small_line->line().y2()-3);
+    //     y_index->setScale(0.25);
+    //     y_index->setDefaultTextColor(Qt::white);
+    //     scene->addItem(small_line);
+    //     scene->addItem(y_index);
+    // }
+
+    // Y-Axis Markers:
+    for (int y = 0; y <= max_y; y++) { 
+        qreal tick_length = 2.0; // Small tick for every 1m
+
+        if (y % 10 == 0) {
+            tick_length = 6.0; // Large tick for every 10m
+        } else if (y % 5 == 0) {
+            tick_length = 4.0; // Medium tick for every 5m
+        }
+
+        // Draw the tick line
+        QGraphicsLineItem* tick_line = new QGraphicsLineItem(offset, y * 10, offset - tick_length, y * 10);
+        tick_line->setPen(legendPen);
+        scene->addItem(tick_line);
+
+        // Only draw the text label if it is a 10m mark
+        if (y % 10 == 0) {
+            QGraphicsTextItem* y_index = new QGraphicsTextItem(QString::number(y));
+            y_index->setFont(smallFont);
+            y_index->setDefaultTextColor(Qt::white);
+            // Align text to the left of the tick
+            y_index->setPos(offset - 8.0 - y_index->boundingRect().width(), (y * 10) - (y_index->boundingRect().height() / 2.0));
+            scene->addItem(y_index);
+        }
     }
-    // let's only use one [m] for both axes
-    // QGraphicsTextItem* y_unit = new QGraphicsTextItem("[m]");
-    // y_unit->setPos(-6-3.4,-4.4);
-    // y_unit->setScale(0.25);
-    // y_unit->setDefaultTextColor(Qt::white);
-    // scene->addItem(y_unit);
 
 }
 

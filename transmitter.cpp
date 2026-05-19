@@ -1,10 +1,12 @@
 #include "transmitter.h"
 
+qreal _factor = 3;
+
 Transmitter::Transmitter(qreal x, qreal y, int selector_index, QString name){
     // Transmitter object constructor
     QBrush txBrush(Qt::white);
     QPen txPen(Qt::gray);
-    txPen.setWidthF(6*0.07);
+    txPen.setWidthF(_factor*5*0.07);
 
     this->selector_index = selector_index;
     this->name = name;
@@ -21,7 +23,8 @@ Transmitter::Transmitter(qreal x, qreal y, int selector_index, QString name){
 
 void Transmitter::setGraphicsRect(qreal x,qreal y)
 {
-    this->graphics->setRect(10*x-1.2,10*y-1.2,2.4,2.4);
+    qreal _nb = 2.4;
+    this->graphics->setRect(10*x-(_factor*_nb/2),10*y-(_factor*_nb/2),_factor*_nb,_factor*_nb);
 }
 
 int Transmitter::getPower_dBm() const
