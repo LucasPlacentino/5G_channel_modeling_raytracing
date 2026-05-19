@@ -3,6 +3,7 @@
 
 #include <complex>
 #include <QtTypes>
+#include <qmath.h>
 
 using namespace std;
 
@@ -39,7 +40,9 @@ static constexpr qreal max_bitrate_Mbps = 1000; // 1 Gbps
 static constexpr qreal min_bitrate_Mbps = 100; // 100 Mbps
 // assume that the UE sensitivity (in dBm) varies linearly with the maximum achievable bit rate when both quantities are expressed in a logarithmic scale
 
-static constexpr qreal far_field_min_distance = 1.0; // 1 meter exclusion zone
+// far-field, plane waves, check:
+static constexpr qreal D = 0.1; // max physical dimension of antenna ~= 10cm
+static const qreal far_field_min_distance = qMax(qMax(1.6*lambda,5*D),2*qPow(D,2)/lambda); // exclusion zone for not plane wave (far-field)
 
 // TODO: change
 static constexpr qreal max_x = 80;

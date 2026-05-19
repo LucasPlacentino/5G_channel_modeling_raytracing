@@ -107,6 +107,7 @@ void Simulation::run(QProgressBar* progress_bar)
     qDebug() << "lambda:" << lambda << "m";
     qDebug() << "frequency:" << freq << "Hz";
     qDebug() << "omega:" << omega << "rad/s";
+    qDebug() << "Exclusion zone for not far-field:" << far_field_min_distance << "m";
 
 
     for (QList<Receiver*>& cells_line : this->cells) {
