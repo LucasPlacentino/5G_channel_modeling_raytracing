@@ -80,7 +80,7 @@ void Receiver::updateBitrateAndColor()
         this->cell_color = QColor::fromRgb(255,0,0); // red
     } else if (power_dBm < min_sensitivity_dBm) { // 50 Mbps at -90 dBm
         bitrate = 0; //in Mbps, no connection (0 Mbps)
-        this->cell_color = Qt::black; // Qt::transparent or Qt::black or Qt::darkBlue ?
+        this->cell_color = Qt::transparent; // Qt::transparent or Qt::black or Qt::darkBlue ?
     } else {
 
         //bitrate = min_bitrate_Mbps + (((this->power - min_power_mW/1000) / (max_power_mW/1000 - min_power_mW/1000)) * (max_bitrate_Mbps - min_bitrate_Mbps));
@@ -150,6 +150,12 @@ QColor Receiver::computeColor(qreal value)
 qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final total power computation for this RX
 
 {
+    // TODO: far-field cut-off protection ?
+    qreal distance_to_tx = this->distanceToPoint(*transmitter);
+    if (distance_to_tx < far_field_min_distance) {
+        return 0.0; // Return 0 power; model is invalid here
+    }
+
     // Initial E-field amplitude at 1m
     // for THIS transmitter
     qreal E0 = sqrt(60.0 * transmitter->gain * transmitter->power);
@@ -172,6 +178,7 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
         }
 
         qreal d = ray->getTotalDistance();
+
         // Coherent addition: E_n = E0 * (Coeffs) * exp(-j*beta*d) / d
         complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
         E_tot += E_ray;

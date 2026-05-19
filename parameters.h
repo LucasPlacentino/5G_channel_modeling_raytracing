@@ -39,6 +39,8 @@ static constexpr qreal max_bitrate_Mbps = 1000; // 1 Gbps
 static constexpr qreal min_bitrate_Mbps = 100; // 100 Mbps
 // assume that the UE sensitivity (in dBm) varies linearly with the maximum achievable bit rate when both quantities are expressed in a logarithmic scale
 
+static constexpr qreal far_field_min_distance = 1.0; // 1 meter exclusion zone
+
 // TODO: change
 static constexpr qreal max_x = 80;
 static constexpr qreal min_x = 0;

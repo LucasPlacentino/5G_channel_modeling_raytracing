@@ -42,7 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
     toggleCoverageParametersLayout(true);
     toggleCellParametersLayout(false);
 
-    for (qreal resolution : resolutions) {
+    for (qreal resolution : std::as_const(resolutions)) {
         ui->resolutionComboBox->addItem(QString("%1 m").arg(resolution));
     }
     ui->resolutionComboBox->setCurrentIndex(0);
