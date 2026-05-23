@@ -5,6 +5,17 @@
 
 #include "parameters.h"
 
+// for path loss plot:
+#include <QtCharts/QChartView>
+#include <QtCharts/QScatterSeries>
+#include <QtCharts/QLogValueAxis>
+#include <QtCharts/QValueAxis>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QFileDialog>
+#include <QShortcut>
+
 
 Simulation::Simulation(bool show) {
     // class constructor
@@ -1061,5 +1072,125 @@ void Simulation::addLegend(QGraphicsScene* scene)
         }
     }
 
+}
+
+// path loss scatter plot
+QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
+{
+    if (this->baseStations.size() != 1) {
+        qWarning() << "Path Loss Scatter Plot is only available for exactly 1 Base Station.";
+        return nullptr;
+    }
+    QScatterSeries *scatterSeries = new QScatterSeries();
+    scatterSeries->setName("Simulated Receiver Cells");
+    scatterSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+    scatterSeries->setMarkerSize(4.0);
+    
+    // Use a slight transparency (alpha = 150) so overlapping points create a "density heat" effect
+    scatterSeries->setColor(QColor(0, 100, 255, 150)); 
+    scatterSeries->setBorderColor(Qt::transparent);
+
+    qreal min_pwr = 0.0;
+    qreal max_pwr = -200.0;
+    qreal max_dist = 1.0;
+
+    // 1. Extract the Data
+    for (const QList<Receiver*>& row : this->cells) {
+        for (Receiver* rx : row) {
+            // Only plot valid cells that are connected to a transmitter
+            if (rx->power > 0.0 && rx->connected_tx != nullptr) {
+                
+                qreal d = rx->distanceToPoint(*(rx->connected_tx));
+                
+                // // Enforce the far-field minimum distance (1m) so the Log axis doesn't crash on d=0
+                // if (d < 1.0) d = 1.0; 
+
+                qreal p_dBm = 10.0 * std::log10(rx->power * 1000.0);
+
+                scatterSeries->append(d, p_dBm);
+
+                // Track bounds for dynamic axes
+                if (p_dBm < min_pwr) min_pwr = p_dBm;
+                if (p_dBm > max_pwr) max_pwr = p_dBm;
+                if (d > max_dist) max_dist = d;
+            }
+        }
+    }
+
+    if (scatterSeries->count() == 0) {
+        qDebug() << "No valid data to plot.";
+        return;
+    }
+
+    // 2. Build the Chart
+    QChart *chart = new QChart();
+    chart->addSeries(scatterSeries);
+    chart->setTitle("Path Loss Scatter Plot (Power vs. Distance)");
+    chart->legend()->setVisible(true);
+
+    QFont font;
+    font.setPointSize(12);
+
+    // // X-Axis (Logarithmic scale for Distance)
+    // QLogValueAxis *axisX = new QLogValueAxis();
+    // axisX->setTitleText("Distance (m) [Log Scale]");
+    // axisX->setTitleFont(font);
+    // axisX->setBase(10.0);
+    // axisX->setLabelFormat("%g");
+    // axisX->setRange(1.0, max_dist + 20.0); // Start at 1m reference distance
+    // chart->addAxis(axisX, Qt::AlignBottom);
+    // scatterSeries->attachAxis(axisX);
+
+    // X-Axis (Linear scale for Distance)
+    QValueAxis *axisX = new QValueAxis();
+    axisX->setTitleText("Distance (m)");
+    axisX->setTitleFont(font);
+    axisX->setRange(0.0, max_dist + 5.0); // Start at 0m, add 5m padding
+    axisX->setLabelFormat("%.1f");
+    chart->addAxis(axisX, Qt::AlignBottom);
+    scatterSeries->attachAxis(axisX);
+
+    // Y-Axis (Linear scale for dBm)
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setTitleText("Received Power (dBm)");
+    axisY->setTitleFont(font);
+    axisY->setRange(min_pwr - 5.0, max_pwr + 5.0);
+    chart->addAxis(axisY, Qt::AlignLeft);
+    scatterSeries->attachAxis(axisY);
+
+    // 3. Create the UI Window (Reusing the export logic)
+    QChartView *chartView = new QChartView(chart);
+    chartView->setRenderHint(QPainter::Antialiasing);
+
+    QWidget *window = new QWidget();
+    window->setWindowTitle("Path Loss Analysis");
+    window->resize(800, 600);
+    window->setAttribute(Qt::WA_DeleteOnClose);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(window);
+    mainLayout->addWidget(chartView, 1);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    QPushButton *btnSavePng = new QPushButton("Save as PNG");
+    btnSavePng->setMinimumHeight(30);
+    buttonLayout->addWidget(btnSavePng);
+    buttonLayout->addStretch();
+    mainLayout->addLayout(buttonLayout);
+
+    QObject::connect(btnSavePng, &QPushButton::clicked, [window, chartView]() {
+        QString fileName = QFileDialog::getSaveFileName(window, "Save Chart", "", "PNG Image (*.png)");
+        if (!fileName.isEmpty()) {
+            chartView->grab().save(fileName);
+        }
+    });
+
+    QShortcut *saveShortcut = new QShortcut(QKeySequence::Save, window); 
+    QObject::connect(saveShortcut, &QShortcut::activated, [window, chartView]() {
+        QString fileName = QFileDialog::getSaveFileName(window, "Save Chart", "", "PNG Image (*.png)");
+        if (!fileName.isEmpty()) chartView->grab().save(fileName);
+    });
+
+    window->show();
+    return chartView;
 }
 

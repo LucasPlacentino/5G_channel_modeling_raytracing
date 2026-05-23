@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QDir>
+#include <QChartView>
 
 #include "parameters.h"
 
@@ -17,6 +18,7 @@
 #include "validation_triple_reflection.h"
 //#include "validation_recursive.h"
 QGraphicsView* Validation_view;
+QChartView* plot_view;
 
 Simulation simulation = Simulation(); // The global simulation object, use `extern Simulation simulation;` in other files?
 
@@ -187,7 +189,7 @@ void MainWindow::on_actionAbout_triggered()
                           "<br>By Lucas Placentino, 2026"));
 }
 
-void MainWindow::saveImage(QGraphicsView* target_view, bool isValidation)
+void MainWindow::saveImage(QGraphicsView* target_view, bool isValidation) // bool isValidation not used
 {
     // Resolve default argument
     if (target_view == nullptr) {
@@ -247,6 +249,7 @@ void MainWindow::on_actionSave_image_triggered()
         return;
     }
     saveImage(simulation.view);
+    if (plot_view != nullptr) saveImage(plot_view);
 }
 
 
@@ -447,5 +450,16 @@ void MainWindow::on_removeAllWallsCheckBox_toggled(bool checked)
 {
     simulation.remove_all_walls = checked;
     qDebug() << "Remove all walls:" << checked;
+}
+
+
+void MainWindow::on_actionView_path_loss_plot_triggered()
+{
+    if (simulation.ran && simulation.baseStations.length() == 1) { // sim ran and only 1 BS
+        qDebug() << "Showing path loss plot";
+        plot_view = simulation.showPathLossScatterPlot();
+    } else {
+        qDebug() << "Simulation hasn't run yet! Cannot show path loss plot.";
+    }
 }
 

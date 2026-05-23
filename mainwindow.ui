@@ -726,6 +726,7 @@
     </property>
     <addaction name="separator"/>
     <addaction name="actionSave_image"/>
+    <addaction name="actionView_path_loss_plot"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
     <addaction name="actionReset"/>
@@ -844,6 +845,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionView_path_loss_plot">
+   <property name="text">
+    <string>View path loss plot</string>
    </property>
   </action>
  </widget>

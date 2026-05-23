@@ -55,6 +55,8 @@ private slots:
 
     void on_removeAllWallsCheckBox_toggled(bool checked);
 
+    void on_actionView_path_loss_plot_triggered();
+
 private:
     Ui::MainWindow *ui;
     bool runSimulation(QProgressBar* progress_bar);

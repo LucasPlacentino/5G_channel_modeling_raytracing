@@ -14,6 +14,7 @@
 #include <QObject>
 #include <QEvent>
 #include <QGraphicsSceneMouseEvent>
+#include <QChartView>
 
 // class Simulation: public QObject {
 //     Q_OBJECT // Required macro for Qt event system
@@ -47,6 +48,9 @@ public:
     QList<Transmitter*> baseStations; // TX list
     QList<QList<Receiver*>> cells; // RX matrix
     QList<Obstacle*> obstacles; // walls list
+
+    QChartView* showPathLossScatterPlot();
+
 
     qreal singleCellX=2;
     qreal singleCellY=2;
