@@ -1,6 +1,7 @@
 #include "simulation.h"
 
 #include <QDir>
+#include <QLineSeries>
 #include <QtMath>
 
 #include "parameters.h"
@@ -15,6 +16,8 @@
 #include <QHBoxLayout>
 #include <QFileDialog>
 #include <QShortcut>
+#include <QtCharts/QLegendMarker>
+#include <QtCharts/QAreaSeries>
 
 
 Simulation::Simulation(bool show) {
@@ -1075,7 +1078,7 @@ void Simulation::addLegend(QGraphicsScene* scene)
 }
 
 // path loss scatter plot
-QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
+QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
 {
     if (this->baseStations.size() != 1) {
         qWarning() << "Path Loss Scatter Plot is only available for exactly 1 Base Station.";
@@ -1086,7 +1089,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
     scatterSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
     scatterSeries->setMarkerSize(4.0);
     
-    // Use a slight transparency (alpha = 150) so overlapping points create a "density heat" effect
+    // slightly transparent (alpha = 150) so overlapping points create a "density heat" effect
     scatterSeries->setColor(QColor(0, 100, 255, 150)); 
     scatterSeries->setBorderColor(Qt::transparent);
 
@@ -1124,9 +1127,66 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
 
     // 2. Build the Chart
     QChart *chart = new QChart();
-    chart->addSeries(scatterSeries);
+    qreal x_max_rounded = std::ceil(max_dist / 10.0) * 10.0;
+
+    // -- Add UE Sensitivity Threshold Lines
+    QPen thresholdPen(Qt::black);
+    thresholdPen.setWidth(1);
+    thresholdPen.setStyle(Qt::DashLine);
+    // Min Sensitivity Line
+    QLineSeries *minLimitSeries = new QLineSeries();
+    //minLimitSeries->setName("UE Min Sensitivity Threshold");
+    minLimitSeries->setPen(thresholdPen);
+    minLimitSeries->append(0.0, min_sensitivity_dBm);
+    minLimitSeries->append(x_max_rounded, min_sensitivity_dBm);
+    // Max Sensitivity (Saturation) Line
+    QLineSeries *maxLimitSeries = new QLineSeries();
+    //maxLimitSeries->setName("UE Max Sensitivity Threshold");
+    maxLimitSeries->setPen(thresholdPen);
+    maxLimitSeries->append(0.0, max_sensitivity_dBm);
+    maxLimitSeries->append(x_max_rounded, max_sensitivity_dBm);
+
+    // -- Add Near-Field Blackout Zone
+    QLineSeries *nearFieldLower = new QLineSeries();
+    nearFieldLower->append(0.0, -300.0); // Arbitrary extreme low
+    nearFieldLower->append(far_field_min_distance, -300.0);
+    QLineSeries *nearFieldUpper = new QLineSeries();
+    nearFieldUpper->append(0.0, 100.0); // Arbitrary extreme high
+    nearFieldUpper->append(far_field_min_distance, 100.0);
+    QAreaSeries *nearFieldArea = new QAreaSeries(nearFieldUpper, nearFieldLower);
+    nearFieldArea->setPen(Qt::NoPen); // No border line
+    nearFieldArea->setBrush(QBrush(Qt::darkGray)); // Solid black fill
+
+    // -- Add series to chart
+    chart->addSeries(nearFieldArea); // painted 1st ("background")
+    chart->addSeries(minLimitSeries); // painted 2nd
+    chart->addSeries(maxLimitSeries); // painted 3rd
+    chart->addSeries(scatterSeries); // painted 4th (top layer)
+
     chart->setTitle(QString("Path Loss Scatter Plot (Power vs. Distance), TX power: %1 dBm").arg(QString::number(this->baseStations[0]->getPower_dBm())));
+
+    // -- Larger Chart Title
+    QFont titleFont = chart->titleFont();
+    titleFont.setPointSize(16); // Increase this number as needed
+    titleFont.setBold(true);
+    chart->setTitleFont(titleFont);
+
     chart->legend()->setVisible(true);
+
+    // -- hide threshold lines from legend
+    const auto minMarkers = chart->legend()->markers(minLimitSeries);
+    for (QLegendMarker *marker : minMarkers) {
+        marker->setVisible(false);
+    }
+    const auto maxMarkers = chart->legend()->markers(maxLimitSeries);
+    for (QLegendMarker *marker : maxMarkers) {
+        marker->setVisible(false);
+    }
+    // -- hide near-field bg box
+    const auto nearFieldMarkers = chart->legend()->markers(nearFieldArea);
+    for (QLegendMarker *marker : nearFieldMarkers) {
+        marker->setVisible(false);
+    }
 
     QFont font;
     font.setPointSize(12);
@@ -1152,7 +1212,6 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
 
     // --- X-Axis (Linear scale for Distance) ---
     // Round max distance up to the nearest 10 (e.g., 123m becomes 130m)
-    qreal x_max_rounded = std::ceil(max_dist / 10.0) * 10.0;
     QValueAxis *axisX = new QValueAxis();
     axisX->setTitleText("Distance (m)");
     axisX->setTitleFont(font);
@@ -1163,6 +1222,10 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
     axisX->setMinorTickCount(1);
     axisX->setLabelFormat("%d"); // Force integer display
     chart->addAxis(axisX, Qt::AlignBottom);
+
+    nearFieldArea->attachAxis(axisX);
+    minLimitSeries->attachAxis(axisX);
+    maxLimitSeries->attachAxis(axisX);
     scatterSeries->attachAxis(axisX);
 
     // // Y-Axis (Linear scale for dBm)
@@ -1188,9 +1251,13 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
     axisY->setMinorTickCount(1);
     axisY->setLabelFormat("%d"); // Force integer display
     chart->addAxis(axisY, Qt::AlignLeft);
+
+    nearFieldArea->attachAxis(axisY);
+    minLimitSeries->attachAxis(axisY);
+    maxLimitSeries->attachAxis(axisY);
     scatterSeries->attachAxis(axisY);
 
-    // 3. Create the UI Window (Reusing the export logic)
+    // 3. Create the UI Window (reuse image export code from TDL)
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
