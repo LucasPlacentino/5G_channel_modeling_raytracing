@@ -1098,6 +1098,13 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     qreal max_dist = 1.0;
     qreal safe_log_zero = 0.001; // Prevents log10(0) math crashes
 
+    // Variables for Least Squares Linear Regression
+    qreal sum_x = 0;
+    qreal sum_y = 0;
+    qreal sum_xy = 0;
+    qreal sum_x2 = 0;
+    int N = 0;
+
     // 1. Extract the Data
     for (const QList<Receiver*>& row : std::as_const(this->cells)) {
         for (Receiver* rx : row) {
@@ -1113,6 +1120,17 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
 
                 scatterSeries->append(d, p_dBm);
 
+                // Accumulate data for the log-normal regression fit
+                // x = 10 * log10(d), y = P_dBm
+                qreal x_val = 10.0 * std::log10(d);
+                qreal y_val = p_dBm;
+
+                sum_x += x_val;
+                sum_y += y_val;
+                sum_xy += (x_val * y_val);
+                sum_x2 += (x_val * x_val);
+                N++;
+
                 // Track bounds for dynamic axes
                 if (p_dBm < min_pwr) min_pwr = p_dBm;
                 if (p_dBm > max_pwr) max_pwr = p_dBm;
@@ -1124,6 +1142,29 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     if (scatterSeries->count() == 0) {
         qDebug() << "No valid data to plot.";
         return nullptr;
+    }
+
+    // --- Compute Log-Normal Regression (Path Loss Law) ---
+    QLineSeries *fitSeries = new QLineSeries();
+    fitSeries->setName("Path Loss Model");
+    if (N > 1) {
+        // Calculate slope (m) and intercept (C) for y = mx + C
+        qreal m = (N * sum_xy - sum_x * sum_y) / (N * sum_x2 - sum_x * sum_x);
+        qreal C = (sum_y - m * sum_x) / N;
+        qreal n = -m; // Path Loss Exponent (PLE?)
+        // Update the series name to show the computed math in the legend
+        fitSeries->setName(QString("Fit: Path loss exponent (n) = %1").arg(n, 0, 'f', 2));
+        QPen fitPen(Qt::red);
+        fitPen.setWidth(3); // Thick red line
+        fitSeries->setPen(fitPen);
+        // Generate the curve using 100 points so it bends correctly on a linear axis
+        int num_points = 100;
+        qreal step = (max_dist - 1.0) / num_points;
+        for (int i = 0; i <= num_points; i++) {
+            qreal d_val = 1.0 + i * step;
+            qreal p_val = C - n * 10.0 * std::log10(d_val);
+            fitSeries->append(d_val, p_val);
+        }
     }
 
     // 2. Build the Chart
@@ -1159,10 +1200,14 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     nearFieldArea->setBrush(QBrush(Qt::darkGray)); // Solid black fill
 
     // -- Add series to chart
-    chart->addSeries(nearFieldArea); // painted 1st ("background")
+    // "bg" layer
+    chart->addSeries(nearFieldArea); // painted 1st
+    // "mid" layer
     chart->addSeries(minLimitSeries); // painted 2nd
     chart->addSeries(maxLimitSeries); // painted 3rd
-    chart->addSeries(scatterSeries); // painted 4th (top layer)
+    // "top" layer
+    chart->addSeries(scatterSeries); // painted 4th
+    chart->addSeries(fitSeries); // Painted 5th
 
     chart->setTitle(QString("Path Loss Scatter Plot (Power vs. Distance), TX power: %1 dBm").arg(QString::number(this->baseStations[0]->getPower_dBm())));
 
@@ -1218,6 +1263,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     minLimitSeries->attachAxis(axisX);
     maxLimitSeries->attachAxis(axisX);
     scatterSeries->attachAxis(axisX);
+    fitSeries->attachAxis(axisX);
 
     // // -- Y-Axis (Linear scale for dBm)
     // QValueAxis *axisY = new QValueAxis();
@@ -1247,6 +1293,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     minLimitSeries->attachAxis(axisY);
     maxLimitSeries->attachAxis(axisY);
     scatterSeries->attachAxis(axisY);
+    fitSeries->attachAxis(axisY);
 
     // 3. Create the UI Window (reuse image export code from TDL)
     QChartView *chartView = new QChartView(chart);
@@ -1291,7 +1338,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     });
 
     // lambda function
-    QObject::connect(btnToggleX, &QPushButton::clicked, [chart, scatterSeries, minLimitSeries, maxLimitSeries, nearFieldArea, font, max_dist, x_max_rounded]() {
+    QObject::connect(btnToggleX, &QPushButton::clicked, [chart, scatterSeries, minLimitSeries, maxLimitSeries, nearFieldArea, fitSeries, font, max_dist, x_max_rounded]() {
 
         // 1. Get the current X-Axis
         QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).first();
@@ -1302,6 +1349,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         minLimitSeries->detachAxis(oldAxisX);
         maxLimitSeries->detachAxis(oldAxisX);
         scatterSeries->detachAxis(oldAxisX);
+        fitSeries->detachAxis(oldAxisX);
 
         // 3. Remove and delete the old axis
         chart->removeAxis(oldAxisX);
@@ -1328,6 +1376,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
             minLimitSeries->attachAxis(newAxisX);
             maxLimitSeries->attachAxis(newAxisX);
             scatterSeries->attachAxis(newAxisX);
+            fitSeries->attachAxis(newAxisX);
 
         } else {
             // --- Switch to LINEAR ---
@@ -1345,6 +1394,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
             minLimitSeries->attachAxis(newAxisX);
             maxLimitSeries->attachAxis(newAxisX);
             scatterSeries->attachAxis(newAxisX);
+            fitSeries->attachAxis(newAxisX);
         }
     });
 
