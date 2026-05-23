@@ -1096,6 +1096,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     qreal min_pwr = 0.0;
     qreal max_pwr = -200.0;
     qreal max_dist = 1.0;
+    qreal safe_log_zero = 0.001; // Prevents log10(0) math crashes
 
     // 1. Extract the Data
     for (const QList<Receiver*>& row : std::as_const(this->cells)) {
@@ -1105,8 +1106,8 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
                 
                 qreal d = rx->distanceToPoint(*(rx->connected_tx));
                 
-                // // Enforce the far-field minimum distance (1m) so the Log axis doesn't crash on d=0
-                // if (d < 1.0) d = 1.0; 
+                // Enforce the far-field minimum distance (1m) so the Log axis doesn't crash on d=0
+                if (d < 1.0) d = 1.0;
 
                 qreal p_dBm = 10.0 * std::log10(rx->power * 1000.0);
 
@@ -1137,21 +1138,21 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     QLineSeries *minLimitSeries = new QLineSeries();
     //minLimitSeries->setName("UE Min Sensitivity Threshold");
     minLimitSeries->setPen(thresholdPen);
-    minLimitSeries->append(0.0, min_sensitivity_dBm);
+    minLimitSeries->append(safe_log_zero, min_sensitivity_dBm);
     minLimitSeries->append(x_max_rounded, min_sensitivity_dBm);
     // Max Sensitivity (Saturation) Line
     QLineSeries *maxLimitSeries = new QLineSeries();
     //maxLimitSeries->setName("UE Max Sensitivity Threshold");
     maxLimitSeries->setPen(thresholdPen);
-    maxLimitSeries->append(0.0, max_sensitivity_dBm);
+    maxLimitSeries->append(safe_log_zero, max_sensitivity_dBm);
     maxLimitSeries->append(x_max_rounded, max_sensitivity_dBm);
 
     // -- Add Near-Field Blackout Zone
     QLineSeries *nearFieldLower = new QLineSeries();
-    nearFieldLower->append(0.0, -300.0); // Arbitrary extreme low
+    nearFieldLower->append(safe_log_zero, -300.0); // Arbitrary extreme low
     nearFieldLower->append(far_field_min_distance, -300.0);
     QLineSeries *nearFieldUpper = new QLineSeries();
-    nearFieldUpper->append(0.0, 100.0); // Arbitrary extreme high
+    nearFieldUpper->append(safe_log_zero, 100.0); // Arbitrary extreme high
     nearFieldUpper->append(far_field_min_distance, 100.0);
     QAreaSeries *nearFieldArea = new QAreaSeries(nearFieldUpper, nearFieldLower);
     nearFieldArea->setPen(Qt::NoPen); // No border line
@@ -1191,7 +1192,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     QFont font;
     font.setPointSize(12);
 
-    // // X-Axis (Logarithmic scale for Distance)
+    // // -- X-Axis (Logarithmic scale for Distance)
     // QLogValueAxis *axisX = new QLogValueAxis();
     // axisX->setTitleText("Distance (m) [Log Scale]");
     // axisX->setTitleFont(font);
@@ -1199,18 +1200,8 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     // axisX->setLabelFormat("%g");
     // axisX->setRange(1.0, max_dist + 20.0); // Start at 1m reference distance
     // chart->addAxis(axisX, Qt::AlignBottom);
-    // scatterSeries->attachAxis(axisX);
 
-    // // X-Axis (Linear scale for Distance)
-    // QValueAxis *axisX = new QValueAxis();
-    // axisX->setTitleText("Distance (m)");
-    // axisX->setTitleFont(font);
-    // axisX->setRange(0.0, max_dist + 5.0); // Start at 0m, add 5m padding
-    // axisX->setLabelFormat("%.1f");
-    // chart->addAxis(axisX, Qt::AlignBottom);
-    // scatterSeries->attachAxis(axisX);
-
-    // --- X-Axis (Linear scale for Distance) ---
+    // -- X-Axis (Linear scale for Distance)
     // Round max distance up to the nearest 10 (e.g., 123m becomes 130m)
     QValueAxis *axisX = new QValueAxis();
     axisX->setTitleText("Distance (m)");
@@ -1220,7 +1211,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     axisX->setTickCount(static_cast<int>(x_max_rounded / 10.0) + 1);
     // Add 1 minor tick between majors (creates a visual mark every 5 meters)
     axisX->setMinorTickCount(1);
-    axisX->setLabelFormat("%d"); // Force integer display
+    axisX->setLabelFormat("%d"); // force integer display
     chart->addAxis(axisX, Qt::AlignBottom);
 
     nearFieldArea->attachAxis(axisX);
@@ -1228,7 +1219,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     maxLimitSeries->attachAxis(axisX);
     scatterSeries->attachAxis(axisX);
 
-    // // Y-Axis (Linear scale for dBm)
+    // // -- Y-Axis (Linear scale for dBm)
     // QValueAxis *axisY = new QValueAxis();
     // axisY->setTitleText("Received Power (dBm)");
     // axisY->setTitleFont(font);
@@ -1236,7 +1227,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     // chart->addAxis(axisY, Qt::AlignLeft);
     // scatterSeries->attachAxis(axisY);
 
-    // --- Y-Axis (Linear scale for dBm) ---
+    // -- Y-Axis (Linear scale for dBm)
     // Round min down to nearest 10, and max up to nearest 10
     qreal y_min_rounded = std::floor((min_pwr - 5.0) / 10.0) * 10.0;
     qreal y_max_rounded = std::ceil((max_pwr + 5.0) / 10.0) * 10.0;
@@ -1249,7 +1240,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     axisY->setTickCount(y_tick_count);
     // Add 1 minor tick between majors (creates a visual mark every 5 dBm)
     axisY->setMinorTickCount(1);
-    axisY->setLabelFormat("%d"); // Force integer display
+    axisY->setLabelFormat("%d"); // force integer display
     chart->addAxis(axisY, Qt::AlignLeft);
 
     nearFieldArea->attachAxis(axisY);
@@ -1270,12 +1261,21 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     mainLayout->addWidget(chartView, 1);
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
+
+
     QPushButton *btnSavePng = new QPushButton("Save as PNG");
     btnSavePng->setMinimumHeight(30);
+
+    QPushButton *btnToggleX = new QPushButton("Toggle Log/Linear X-Axis");
+    btnToggleX->setMinimumHeight(30);
+
     buttonLayout->addWidget(btnSavePng);
+    buttonLayout->addWidget(btnToggleX);
+
     buttonLayout->addStretch();
     mainLayout->addLayout(buttonLayout);
 
+    // lambda function
     QObject::connect(btnSavePng, &QPushButton::clicked, [window, chartView]() {
         QString fileName = QFileDialog::getSaveFileName(window, "Save Chart", "", "PNG Image (*.png)");
         if (!fileName.isEmpty()) {
@@ -1283,13 +1283,73 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         }
     });
 
-    QShortcut *saveShortcut = new QShortcut(QKeySequence::Save, window); 
+    QShortcut *saveShortcut = new QShortcut(QKeySequence::Save, window);
+    // lambda function
     QObject::connect(saveShortcut, &QShortcut::activated, [window, chartView]() {
         QString fileName = QFileDialog::getSaveFileName(window, "Save Chart", "", "PNG Image (*.png)");
         if (!fileName.isEmpty()) chartView->grab().save(fileName);
     });
 
+    // lambda function
+    QObject::connect(btnToggleX, &QPushButton::clicked, [chart, scatterSeries, minLimitSeries, maxLimitSeries, nearFieldArea, font, max_dist, x_max_rounded]() {
+
+        // 1. Get the current X-Axis
+        QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).first();
+        bool isCurrentlyLinear = (oldAxisX->type() == QAbstractAxis::AxisTypeCategory || oldAxisX->type() == QAbstractAxis::AxisTypeValue);
+
+        // 2. Detach old axis from ALL series
+        nearFieldArea->detachAxis(oldAxisX);
+        minLimitSeries->detachAxis(oldAxisX);
+        maxLimitSeries->detachAxis(oldAxisX);
+        scatterSeries->detachAxis(oldAxisX);
+
+        // 3. Remove and delete the old axis
+        chart->removeAxis(oldAxisX);
+        delete oldAxisX;
+
+        // 4. Create and attach the new axis
+        if (isCurrentlyLinear) {
+            // --- Switch to LOGARITHMIC ---
+            QLogValueAxis *newAxisX = new QLogValueAxis();
+            newAxisX->setTitleText("Distance (m) [Log Scale]");
+            newAxisX->setTitleFont(font);
+            newAxisX->setBase(10.0);
+            newAxisX->setLabelFormat("%g");
+
+            // add 8 minor ticks for the Log grid look
+            newAxisX->setMinorTickCount(8);
+
+            // Log axis cannot start at 0. Start at 1.0 (or your far_field_min_distance).
+            newAxisX->setRange(1.0, max_dist + 20.0);
+
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+
+            nearFieldArea->attachAxis(newAxisX);
+            minLimitSeries->attachAxis(newAxisX);
+            maxLimitSeries->attachAxis(newAxisX);
+            scatterSeries->attachAxis(newAxisX);
+
+        } else {
+            // --- Switch to LINEAR ---
+            QValueAxis *newAxisX = new QValueAxis();
+            newAxisX->setTitleText("Distance (m)");
+            newAxisX->setTitleFont(font);
+            newAxisX->setRange(0.0, x_max_rounded);
+            newAxisX->setTickCount(static_cast<int>(x_max_rounded / 10.0) + 1);
+            newAxisX->setMinorTickCount(1);
+            newAxisX->setLabelFormat("%d");
+
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+
+            nearFieldArea->attachAxis(newAxisX);
+            minLimitSeries->attachAxis(newAxisX);
+            maxLimitSeries->attachAxis(newAxisX);
+            scatterSeries->attachAxis(newAxisX);
+        }
+    });
+
     window->show();
     return chartView;
 }
+
 
