@@ -851,6 +851,9 @@
    <property name="text">
     <string>View path loss plot</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
+   </property>
   </action>
  </widget>
  <resources/>

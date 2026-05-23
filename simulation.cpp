@@ -520,7 +520,7 @@ complex<qreal> Simulation::computeReflectionCoeff(qreal _cos_theta_i, qreal _sin
     // Phase thickness (q)
     qreal q = beta_0 * wall->thickness * sqrt(eps_r - pow(_sin_theta_i, 2));
 
-    // Slab reflection (Gamma_m)
+    // Slab reflection (Gamma_m) !
     complex<qreal> num = Gamma_perp * (1.0 - exp(-2.0 * j * q));
     complex<qreal> den = 1.0 - pow(Gamma_perp, 2) * exp(-2.0 * j * q);
     return num / den;
@@ -1082,7 +1082,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
         return nullptr;
     }
     QScatterSeries *scatterSeries = new QScatterSeries();
-    scatterSeries->setName("Simulated Receiver Cells");
+    scatterSeries->setName("Simulated Receiver UE");
     scatterSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
     scatterSeries->setMarkerSize(4.0);
     
@@ -1095,7 +1095,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
     qreal max_dist = 1.0;
 
     // 1. Extract the Data
-    for (const QList<Receiver*>& row : this->cells) {
+    for (const QList<Receiver*>& row : std::as_const(this->cells)) {
         for (Receiver* rx : row) {
             // Only plot valid cells that are connected to a transmitter
             if (rx->power > 0.0 && rx->connected_tx != nullptr) {
@@ -1119,13 +1119,13 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
 
     if (scatterSeries->count() == 0) {
         qDebug() << "No valid data to plot.";
-        return;
+        return nullptr;
     }
 
     // 2. Build the Chart
     QChart *chart = new QChart();
     chart->addSeries(scatterSeries);
-    chart->setTitle("Path Loss Scatter Plot (Power vs. Distance)");
+    chart->setTitle(QString("Path Loss Scatter Plot (Power vs. Distance), TX power: %1 dBm").arg(QString::number(this->baseStations[0]->getPower_dBm())));
     chart->legend()->setVisible(true);
 
     QFont font;
@@ -1141,20 +1141,52 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS
     // chart->addAxis(axisX, Qt::AlignBottom);
     // scatterSeries->attachAxis(axisX);
 
-    // X-Axis (Linear scale for Distance)
+    // // X-Axis (Linear scale for Distance)
+    // QValueAxis *axisX = new QValueAxis();
+    // axisX->setTitleText("Distance (m)");
+    // axisX->setTitleFont(font);
+    // axisX->setRange(0.0, max_dist + 5.0); // Start at 0m, add 5m padding
+    // axisX->setLabelFormat("%.1f");
+    // chart->addAxis(axisX, Qt::AlignBottom);
+    // scatterSeries->attachAxis(axisX);
+
+    // --- X-Axis (Linear scale for Distance) ---
+    // Round max distance up to the nearest 10 (e.g., 123m becomes 130m)
+    qreal x_max_rounded = std::ceil(max_dist / 10.0) * 10.0;
     QValueAxis *axisX = new QValueAxis();
     axisX->setTitleText("Distance (m)");
     axisX->setTitleFont(font);
-    axisX->setRange(0.0, max_dist + 5.0); // Start at 0m, add 5m padding
-    axisX->setLabelFormat("%.1f");
+    axisX->setRange(0.0, x_max_rounded);
+    // Set a major tick (with text) every 10 meters
+    axisX->setTickCount(static_cast<int>(x_max_rounded / 10.0) + 1);
+    // Add 1 minor tick between majors (creates a visual mark every 5 meters)
+    axisX->setMinorTickCount(1);
+    axisX->setLabelFormat("%d"); // Force integer display
     chart->addAxis(axisX, Qt::AlignBottom);
     scatterSeries->attachAxis(axisX);
 
-    // Y-Axis (Linear scale for dBm)
+    // // Y-Axis (Linear scale for dBm)
+    // QValueAxis *axisY = new QValueAxis();
+    // axisY->setTitleText("Received Power (dBm)");
+    // axisY->setTitleFont(font);
+    // axisY->setRange(min_pwr - 5.0, max_pwr + 5.0);
+    // chart->addAxis(axisY, Qt::AlignLeft);
+    // scatterSeries->attachAxis(axisY);
+
+    // --- Y-Axis (Linear scale for dBm) ---
+    // Round min down to nearest 10, and max up to nearest 10
+    qreal y_min_rounded = std::floor((min_pwr - 5.0) / 10.0) * 10.0;
+    qreal y_max_rounded = std::ceil((max_pwr + 5.0) / 10.0) * 10.0;
     QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("Received Power (dBm)");
     axisY->setTitleFont(font);
-    axisY->setRange(min_pwr - 5.0, max_pwr + 5.0);
+    axisY->setRange(y_min_rounded, y_max_rounded);
+    // Set a major tick (with text) every 10 dBm
+    int y_tick_count = static_cast<int>((y_max_rounded - y_min_rounded) / 10.0) + 1;
+    axisY->setTickCount(y_tick_count);
+    // Add 1 minor tick between majors (creates a visual mark every 5 dBm)
+    axisY->setMinorTickCount(1);
+    axisY->setLabelFormat("%d"); // Force integer display
     chart->addAxis(axisY, Qt::AlignLeft);
     scatterSeries->attachAxis(axisY);
 
