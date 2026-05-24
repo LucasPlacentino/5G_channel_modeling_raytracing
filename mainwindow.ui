@@ -765,7 +765,7 @@
   </action>
   <action name="actionReset">
    <property name="text">
-    <string>Reset app</string>
+    <string>Restart App</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
