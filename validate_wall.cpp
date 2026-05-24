@@ -36,8 +36,8 @@ QWidget* createTwoRayValidationPlot() {
     twoRaySeries->setPen(twoRayPen);
 
     QLineSeries *friisSeries = new QLineSeries(); // Baseline for comparison
-    friisSeries->setName("Friis Free-Space Baseline");
-    QPen friisPen(Qt::darkGray);
+    friisSeries->setName("Friis Free-Space (n=2)");
+    QPen friisPen(Qt::blue);
     friisPen.setStyle(Qt::DashLine);
     friisSeries->setPen(friisPen);
 
@@ -86,8 +86,8 @@ QWidget* createTwoRayValidationPlot() {
 
     // 3. Build the Chart
     QChart *chart = new QChart();
-    chart->addSeries(friisSeries);
     chart->addSeries(twoRaySeries);
+    chart->addSeries(friisSeries);
     chart->setTitle("Validation: Two-Ray Interference Pattern (26 GHz)");
 
     // X-Axis (Linear to clearly see the spatial frequency of the fringes)
@@ -113,7 +113,7 @@ QWidget* createTwoRayValidationPlot() {
 
     QWidget *window = new QWidget();
     window->setWindowTitle("Validation: Two-Ray");
-    window->resize(800, 600);
+    window->resize(1000, 600);
     window->setAttribute(Qt::WA_DeleteOnClose);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(window);

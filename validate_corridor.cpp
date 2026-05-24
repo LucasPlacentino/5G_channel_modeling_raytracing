@@ -52,15 +52,15 @@ QWidget* createThreeReflectionValidationPlot() {
     constexpr double W = 5.0; // Distance from centerline to each wall (10m wide corridor)
 
     // 2. Generate Theoretical Data
-    QLineSeries *canyonSeries = new QLineSeries();
-    canyonSeries->setName("Canyon (Up to 3 Reflections, Dielectric Slab)");
-    QPen canyonPen(Qt::red);
-    canyonPen.setWidth(2);
-    canyonSeries->setPen(canyonPen);
+    QLineSeries *corridorSeries = new QLineSeries();
+    corridorSeries->setName("Corridor/Canyon (up to 3 reflections, dielectric slab model for walls)");
+    QPen corridorPen(Qt::red);
+    corridorPen.setWidth(2);
+    corridorSeries->setPen(corridorPen);
 
     QLineSeries *friisSeries = new QLineSeries();
-    friisSeries->setName("Friis Free-Space Baseline");
-    QPen friisPen(Qt::darkGray);
+    friisSeries->setName("Friis Free-Space (n=2)");
+    QPen friisPen(Qt::blue);
     friisPen.setStyle(Qt::DashLine);
     friisSeries->setPen(friisPen);
 
@@ -100,7 +100,7 @@ QWidget* createThreeReflectionValidationPlot() {
                           20.0 * std::log10(lambda / (4.0 * M_PI)) +
                           10.0 * std::log10(power_factor);
 
-        canyonSeries->append(x, p_rx_dBm);
+        corridorSeries->append(x, p_rx_dBm);
 
         // Baseline FSPL
         double p_rx_friis = p_tx_dBm + g_tx_dB + g_rx_dB - 20.0 * std::log10((4.0 * M_PI * x) / lambda);
@@ -109,8 +109,8 @@ QWidget* createThreeReflectionValidationPlot() {
 
     // 3. Build the Chart
     QChart *chart = new QChart();
+    chart->addSeries(corridorSeries);
     chart->addSeries(friisSeries);
-    chart->addSeries(canyonSeries);
     chart->setTitle("Validation: 3-Reflection Corridor with Dielectric Slab (26 GHz)");
 
     QValueAxis *axisX = new QValueAxis();
@@ -119,22 +119,22 @@ QWidget* createThreeReflectionValidationPlot() {
     axisX->setTickCount(11);
     chart->addAxis(axisX, Qt::AlignBottom);
     friisSeries->attachAxis(axisX);
-    canyonSeries->attachAxis(axisX);
+    corridorSeries->attachAxis(axisX);
 
     QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("Received Power (dBm)");
     axisY->setRange(-100.0, -40.0);
     chart->addAxis(axisY, Qt::AlignLeft);
     friisSeries->attachAxis(axisY);
-    canyonSeries->attachAxis(axisY);
+    corridorSeries->attachAxis(axisY);
 
     // 3. Create the UI Window
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
     QWidget *window = new QWidget();
-    window->setWindowTitle("Validation: 3-Reflection Canyon");
-    window->resize(800, 600);
+    window->setWindowTitle("Validation: 3-Reflection Corridor/Canyon");
+    window->resize(1000, 600);
     window->setAttribute(Qt::WA_DeleteOnClose);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(window);

@@ -9,12 +9,14 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <cmath>
+#include <complex>
 
 QWidget* createFreeSpaceValidationPlot() {
-    // 1. Simulation Parameters
+    // 0. Simulation Parameters
     constexpr double freq = 26e9; // 26 GHz
     constexpr double c = 3e8;
     constexpr double lambda = c / freq;
+    constexpr double beta = (2.0 * M_PI) / lambda; // Phase constant
 
     constexpr double p_tx_dBm = 20.0;
     constexpr double g_tx_linear = 1.64; // lambda/2 dipole
@@ -23,11 +25,19 @@ QWidget* createFreeSpaceValidationPlot() {
     double g_tx_dB = 10.0 * std::log10(g_tx_linear);
     double g_rx_dB = 10.0 * std::log10(g_rx_linear);
 
+    // 1. Generate Simulated Ray-Tracer Output (Thick Solid Line)
+    QLineSeries *simSeries = new QLineSeries();
+    simSeries->setName("Simulated");
+    QPen simPen(Qt::red);
+    simPen.setWidth(5); // thick line so the dotted one shows on top
+    simSeries->setPen(simPen);
+
     // 2. Generate Theoretical Data
     QLineSeries *friisSeries = new QLineSeries();
     friisSeries->setName("Friis Free-Space (n=2)");
-    QPen friisPen(Qt::blue);
+    QPen friisPen(Qt::cyan);
     friisPen.setWidth(2);
+    friisPen.setStyle(Qt::DotLine);
     friisSeries->setPen(friisPen);
 
     double max_dist = 100.0;
@@ -40,9 +50,19 @@ QWidget* createFreeSpaceValidationPlot() {
     for (int i = 1; i <= num_points; i++) {
         double d = i * step;
 
-        // FSPL Equation: PRX = PTX + GTX + GRX - 20*log10(4*pi*d / lambda)
-        double fspl_dB = 20.0 * std::log10((4.0 * M_PI * d) / lambda);
-        double p_rx_dBm = p_tx_dBm + g_tx_dB + g_rx_dB - fspl_dB;
+        // Simulation logic: calculate via Complex E-Field (Like your ray engine)
+        std::complex<double> E_direct = std::polar(1.0 / d, -beta * d);
+        double power_factor = std::norm(E_direct); // |E|^2
+
+        double p_rx_sim_dBm = p_tx_dBm + g_tx_dB + g_rx_dB +
+                              20.0 * std::log10(lambda / (4.0 * M_PI)) +
+                              10.0 * std::log10(power_factor);
+
+        simSeries->append(d, p_rx_sim_dBm);
+
+        // Friis theoratical equation: PRX = PTX + GTX + GRX - 20*log10(4*pi*d / lambda)
+        double friis_dB = 20.0 * std::log10((4.0 * M_PI * d) / lambda);
+        double p_rx_dBm = p_tx_dBm + g_tx_dB + g_rx_dB - friis_dB;
 
         friisSeries->append(d, p_rx_dBm);
 
@@ -52,10 +72,11 @@ QWidget* createFreeSpaceValidationPlot() {
 
     // 3. Build the Chart
     QChart *chart = new QChart();
+    chart->addSeries(simSeries);
     chart->addSeries(friisSeries);
     chart->setTitle("Validation: Free-Space Propagation (26 GHz)");
 
-    // X-Axis (Logarithmic to match course slide 26)
+    // X-Axis (log scale to match slide 26)
     QLogValueAxis *axisX = new QLogValueAxis();
     axisX->setTitleText("Distance (m) [Log Scale]");
     axisX->setBase(10.0);
@@ -63,6 +84,7 @@ QWidget* createFreeSpaceValidationPlot() {
     axisX->setMinorTickCount(8);
     axisX->setLabelFormat("%g");
     chart->addAxis(axisX, Qt::AlignBottom);
+    simSeries->attachAxis(axisX);
     friisSeries->attachAxis(axisX);
 
     // Y-Axis
@@ -70,15 +92,16 @@ QWidget* createFreeSpaceValidationPlot() {
     axisY->setTitleText("Received Power (dBm)");
     axisY->setRange(std::floor(min_pwr / 10.0) * 10.0, std::ceil(max_pwr / 10.0) * 10.0);
     chart->addAxis(axisY, Qt::AlignLeft);
+    simSeries->attachAxis(axisY);
     friisSeries->attachAxis(axisY);
 
-    // 3. Create the UI Window
+    // 4. Create the UI Window
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
 
     QWidget *window = new QWidget();
     window->setWindowTitle("Validation: Free-Space");
-    window->resize(800, 600);
+    window->resize(1000, 600);
     window->setAttribute(Qt::WA_DeleteOnClose);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(window);

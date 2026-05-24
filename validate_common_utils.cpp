@@ -9,12 +9,12 @@
 void showValidationScene(QGraphicsScene* scene, const QString& title) {
     QGraphicsView* view = new QGraphicsView(scene);
     view->setRenderHint(QPainter::Antialiasing);
-    // Inverse l'axe Y pour que la géométrie +Y s'affiche vers le haut, comme en mathématiques
+    // invert y-axis to have it point up ?
     view->scale(1, -1);
 
     QWidget* window = new QWidget();
     window->setWindowTitle(title);
-    window->resize(800, 400);
+    window->resize(1000, 600);
     window->setAttribute(Qt::WA_DeleteOnClose);
 
     QVBoxLayout* layout = new QVBoxLayout(window);
