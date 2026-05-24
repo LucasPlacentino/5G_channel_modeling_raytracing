@@ -126,7 +126,7 @@ QWidget* createTwoRayValidationPlot() {
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *btnSavePng = new QPushButton("Save Chart PNG");
-    QPushButton *btnScene = new QPushButton("View 2D Scene Snapshot (d=50m)");
+    QPushButton *btnScene = new QPushButton("View 2D Scene (d=50m)");
     QPushButton *btnToggleAxis = new QPushButton("Toggle X-Axis (Log/Linear)");
     buttonLayout->addWidget(btnToggleAxis);
     buttonLayout->addWidget(btnSavePng);
@@ -159,7 +159,7 @@ QWidget* createTwoRayValidationPlot() {
         scene->addLine(d/2, w, d, 0, QPen(Qt::magenta, 2));
 
         scene->setSceneRect(-20, -20, d + 40, w + 40);
-        showValidationScene(scene, "Two-Ray Geometry Snapshot (d=50m)");
+        showValidationScene(scene, "Single Reflection Geometry Snapshot (d=50m)");
     });
 
     QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, twoRaySeries, friisSeries]() {

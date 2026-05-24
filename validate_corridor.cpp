@@ -147,7 +147,7 @@ QWidget* createThreeReflectionValidationPlot() {
 
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *btnSavePng = new QPushButton("Save Chart PNG");
-    QPushButton *btnScene = new QPushButton("View 2D Scene Snapshot (d=50m)");
+    QPushButton *btnScene = new QPushButton("View 2D Scene (d=50m)");
     QPushButton *btnToggleAxis = new QPushButton("Toggle X-Axis (Log/Linear)");
     buttonLayout->addWidget(btnToggleAxis);
     buttonLayout->addWidget(btnSavePng);
