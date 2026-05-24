@@ -1098,12 +1098,17 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     qreal max_dist = 1.0;
     qreal safe_log_zero = 0.001; // Prevents log10(0) math crashes
 
+    qreal tx_pwr_dBm = this->baseStations[0]->getPower_dBm();
+    //qreal min_pl_threshold = tx_pwr_dBm - max_sensitivity_dBm;
+    //qreal max_pl_threshold = tx_pwr_dBm - min_sensitivity_dBm;
+
     // Variables for Least Squares Linear Regression
     qreal sum_x = 0;
     qreal sum_y = 0;
     qreal sum_xy = 0;
     qreal sum_x2 = 0;
     int N = 0;
+    QVector<QPointF> regression_data;
 
     // 1. Extract the Data
     for (const QList<Receiver*>& row : std::as_const(this->cells)) {
@@ -1116,24 +1121,31 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
                 // Enforce the far-field minimum distance (1m) so the Log axis doesn't crash on d=0
                 if (d < 1.0) d = 1.0;
 
-                qreal p_dBm = 10.0 * std::log10(rx->power * 1000.0);
+                qreal p_dBm = 10.0 * std::log10(rx->power * 1000.0); // received power
+                //qreal pl_dB = tx_pwr_dBm - p_dBm; // PL
 
-                scatterSeries->append(d, p_dBm);
+                scatterSeries->append(d, p_dBm); // received power
+                //scatterSeries->append(d, pl_dB); // PL
 
                 // Accumulate data for the log-normal regression fit
                 // x = 10 * log10(d), y = P_dBm
                 qreal x_val = 10.0 * std::log10(d);
                 qreal y_val = p_dBm;
+                //qreal y_val = pl_dB; // PL
 
                 sum_x += x_val;
                 sum_y += y_val;
                 sum_xy += (x_val * y_val);
                 sum_x2 += (x_val * x_val);
                 N++;
+                regression_data.append(QPointF(x_val, y_val));
 
                 // Track bounds for dynamic axes
                 if (p_dBm < min_pwr) min_pwr = p_dBm;
                 if (p_dBm > max_pwr) max_pwr = p_dBm;
+                //if (pl_dB < min_pwr) min_pwr = pl_dB; // PL
+                //if (pl_dB > max_pwr) max_pwr = pl_dB; // PL
+
                 if (d > max_dist) max_dist = d;
             }
         }
@@ -1144,26 +1156,77 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         return nullptr;
     }
 
-    // --- Compute Log-Normal Regression (Path Loss Law) ---
+    // -- Compute log-normal regression (path loss law)
     QLineSeries *fitSeries = new QLineSeries();
-    fitSeries->setName("Path Loss Model");
+    QLineSeries *sigmaPlusSeries = new QLineSeries();
+    QLineSeries *sigmaMinusSeries = new QLineSeries();
+    QLineSeries *friisSeries = new QLineSeries();
     if (N > 1) {
         // Calculate slope (m) and intercept (C) for y = mx + C
         qreal m = (N * sum_xy - sum_x * sum_y) / (N * sum_x2 - sum_x * sum_x);
         qreal C = (sum_y - m * sum_x) / N;
-        qreal n = -m; // Path Loss Exponent (PLE?)
-        // Update the series name to show the computed math in the legend
-        fitSeries->setName(QString("Fit: Path loss exponent (n) = %1").arg(n, 0, 'f', 2));
+        qreal n = -m; // received power, Path Loss Exponent (PLE?)
+        //qreal n = m; // PL, Path Loss Exponent (PLE)
+
+        // Calculate Standard Deviation of Shadowing (sigma_L)
+        qreal variance_sum = 0.0;
+        for (const QPointF& pt : regression_data) {
+            qreal predicted_y = C + m * pt.x(); // x is already 10*log10(d)
+            variance_sum += std::pow(pt.y() - predicted_y, 2);
+        }
+        qreal sigma_L = std::sqrt(variance_sum / N);
+
+        // Setup Pens
         QPen fitPen(Qt::red);
-        fitPen.setWidth(3); // Thick red line
+        fitPen.setWidth(3);
         fitSeries->setPen(fitPen);
+        //fitSeries->setName(QString("Fit: Path loss exponent (n) = %1").arg(n, 0, 'f', 2));
+        //fitSeries->setName(QString("Empirical fit: < P_RX(1m) > = %1 dBm, n = %2")
+                               //.arg(C, 0, 'f', 1)
+        fitSeries->setName(QString("Empirical fit: n = %1")
+                               .arg(n, 0, 'f', 2));
+
+        QPen sigmaPen(Qt::green);
+        sigmaPen.setWidth(2);
+        sigmaPen.setStyle(Qt::DotLine);
+        sigmaPlusSeries->setPen(sigmaPen);
+        sigmaMinusSeries->setPen(sigmaPen);
+        //sigmaPlusSeries->setName(QString("+/- 1σ Shadowing (%1 dB)").arg(sigma_L, 0, 'f', 1));
+        sigmaPlusSeries->setName(QString("Shadowing Variability \u03C3_L = %1 dB")
+                                     .arg(sigma_L, 0, 'f', 1));
+
+        QPen friisPen;
+        friisPen.setColor("gold");
+        friisPen.setWidth(2);
+        friisPen.setStyle(Qt::DashLine);
+        friisSeries->setPen(friisPen);
+        friisSeries->setName("Theoretical: Friis Free Space (n=2)");
+
         // Generate the curve using 100 points so it bends correctly on a linear axis
         int num_points = 100;
         qreal step = (max_dist - 1.0) / num_points;
+        // Convert linear gains (1.64) to decibels
+        qreal tx_gain_dB = 10.0 * std::log10(G_TX);
+        qreal rx_gain_dB = 10.0 * std::log10(G_RX);
         for (int i = 0; i <= num_points; i++) {
             qreal d_val = 1.0 + i * step;
-            qreal p_val = C - n * 10.0 * std::log10(d_val);
-            fitSeries->append(d_val, p_val);
+            qreal log_d = 10.0 * std::log10(d_val);
+
+            // Regression Mean & Sigma bands
+            qreal p_val_mean = C + m * log_d;
+            fitSeries->append(d_val, p_val_mean);
+            sigmaPlusSeries->append(d_val, p_val_mean + sigma_L);
+            sigmaMinusSeries->append(d_val, p_val_mean - sigma_L);
+
+            // qreal p_val = C - n * 10.0 * std::log10(d_val); // received power
+            // //qreal pl_val = C + n * 10.0 * std::log10(d_val); // PL
+            // fitSeries->append(d_val, p_val); // received power
+            // //fitSeries->append(d_val, pl_val); // PL
+
+            // theoretical Friis equation
+            // PRX = PTX + G_TX + G_RX - FSPL
+            qreal p_val_friis = tx_pwr_dBm + tx_gain_dB + rx_gain_dB - (20.0 * std::log10((4.0 * M_PI * d_val) / lambda));
+            friisSeries->append(d_val, p_val_friis);
         }
     }
 
@@ -1181,12 +1244,16 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     minLimitSeries->setPen(thresholdPen);
     minLimitSeries->append(safe_log_zero, min_sensitivity_dBm);
     minLimitSeries->append(x_max_rounded, min_sensitivity_dBm);
+    //minLimitSeries->append(safe_log_zero, min_pl_threshold); // PL
+    //minLimitSeries->append(x_max_rounded, min_pl_threshold); // PL
     // Max Sensitivity (Saturation) Line
     QLineSeries *maxLimitSeries = new QLineSeries();
     //maxLimitSeries->setName("UE Max Sensitivity Threshold");
     maxLimitSeries->setPen(thresholdPen);
     maxLimitSeries->append(safe_log_zero, max_sensitivity_dBm);
     maxLimitSeries->append(x_max_rounded, max_sensitivity_dBm);
+    //maxLimitSeries->append(safe_log_zero, max_pl_threshold); // PL
+    //maxLimitSeries->append(x_max_rounded, max_pl_threshold); // PL
 
     // -- Add Near-Field Blackout Zone
     QLineSeries *nearFieldLower = new QLineSeries();
@@ -1201,23 +1268,46 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
 
     // -- Add series to chart
     // "bg" layer
-    chart->addSeries(nearFieldArea); // painted 1st
+    //chart->addSeries(nearFieldArea); // painted 1st
     // "mid" layer
     chart->addSeries(minLimitSeries); // painted 2nd
     chart->addSeries(maxLimitSeries); // painted 3rd
     // "top" layer
     chart->addSeries(scatterSeries); // painted 4th
-    chart->addSeries(fitSeries); // Painted 5th
+    chart->addSeries(friisSeries);
+    chart->addSeries(sigmaPlusSeries);
+    chart->addSeries(sigmaMinusSeries);
+    chart->addSeries(fitSeries);
+    //
+    chart->addSeries(nearFieldArea);
 
     chart->setTitle(QString("Path Loss Scatter Plot (Power vs. Distance), TX power: %1 dBm").arg(QString::number(this->baseStations[0]->getPower_dBm())));
 
     // -- Larger Chart Title
     QFont titleFont = chart->titleFont();
-    titleFont.setPointSize(16); // Increase this number as needed
+    titleFont.setPointSize(16);
     titleFont.setBold(true);
     chart->setTitleFont(titleFont);
 
     chart->legend()->setVisible(true);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    // Detach from the default outside layout
+    chart->legend()->detachFromChart();
+    // semi-transparent white background
+    chart->legend()->setBackgroundVisible(true);
+    chart->legend()->setBrush(QBrush(QColor(255, 255, 255, 220)));
+    chart->legend()->setPen(QPen(Qt::darkGray));
+    // must set X, Y, Width, and Height manually.
+    // X = 450, Y = 50, Width = 320, Height = 120
+    // 1. Constrain width to exactly fit the text (forces left-alignment visually)
+    qreal legendWidth = 240;
+    qreal legendHeight = 110;
+    // 2. Position it relative to the window size (800x600)
+    qreal legendX = 850 - legendWidth - 30; // 500 (Tucked safely inside the right edge)
+    qreal legendY = 70; // Pushed down to clear the chart title
+    chart->legend()->setGeometry(QRectF(legendX, legendY, legendWidth, legendHeight));
+
 
     // -- hide threshold lines from legend
     const auto minMarkers = chart->legend()->markers(minLimitSeries);
@@ -1231,6 +1321,11 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     // -- hide near-field bg box
     const auto nearFieldMarkers = chart->legend()->markers(nearFieldArea);
     for (QLegendMarker *marker : nearFieldMarkers) {
+        marker->setVisible(false);
+    }
+    // -- hide one of the -sigma legend because redundant with sigma (put +/-sigma later in legend)
+    const auto sigmaMinusMarkers = chart->legend()->markers(sigmaMinusSeries);
+    for (QLegendMarker *marker : sigmaMinusMarkers) {
         marker->setVisible(false);
     }
 
@@ -1263,6 +1358,9 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     minLimitSeries->attachAxis(axisX);
     maxLimitSeries->attachAxis(axisX);
     scatterSeries->attachAxis(axisX);
+    friisSeries->attachAxis(axisX);
+    sigmaPlusSeries->attachAxis(axisX);
+    sigmaMinusSeries->attachAxis(axisX);
     fitSeries->attachAxis(axisX);
 
     // // -- Y-Axis (Linear scale for dBm)
@@ -1275,10 +1373,13 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
 
     // -- Y-Axis (Linear scale for dBm)
     // Round min down to nearest 10, and max up to nearest 10
-    qreal y_min_rounded = std::floor((min_pwr - 5.0) / 10.0) * 10.0;
-    qreal y_max_rounded = std::ceil((max_pwr + 5.0) / 10.0) * 10.0;
+    //qreal y_min_rounded = std::floor((min_pwr - 5.0) / 10.0) * 10.0;
+    //qreal y_max_rounded = std::ceil((max_pwr + 5.0) / 10.0) * 10.0;
+    qreal y_min_rounded = std::floor((min_pwr - 0.5) / 10.0) * 10.0;
+    qreal y_max_rounded = std::ceil((max_pwr + 0.5) / 10.0) * 10.0;
     QValueAxis *axisY = new QValueAxis();
-    axisY->setTitleText("Received Power (dBm)");
+    axisY->setTitleText("Received Power (dBm)"); // received power
+    //axisY->setTitleText("Path Loss (dB)"); // PL
     axisY->setTitleFont(font);
     axisY->setRange(y_min_rounded, y_max_rounded);
     // Set a major tick (with text) every 10 dBm
@@ -1293,6 +1394,9 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     minLimitSeries->attachAxis(axisY);
     maxLimitSeries->attachAxis(axisY);
     scatterSeries->attachAxis(axisY);
+    friisSeries->attachAxis(axisY);
+    sigmaPlusSeries->attachAxis(axisY);
+    sigmaMinusSeries->attachAxis(axisY);
     fitSeries->attachAxis(axisY);
 
     // 3. Create the UI Window (reuse image export code from TDL)
@@ -1338,7 +1442,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     });
 
     // lambda function
-    QObject::connect(btnToggleX, &QPushButton::clicked, [chart, scatterSeries, minLimitSeries, maxLimitSeries, nearFieldArea, fitSeries, font, max_dist, x_max_rounded]() {
+    QObject::connect(btnToggleX, &QPushButton::clicked, [chart, scatterSeries, minLimitSeries, maxLimitSeries, nearFieldArea, friisSeries, sigmaPlusSeries, sigmaMinusSeries, fitSeries, font, max_dist, x_max_rounded]() {
 
         // 1. Get the current X-Axis
         QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).first();
@@ -1349,6 +1453,9 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         minLimitSeries->detachAxis(oldAxisX);
         maxLimitSeries->detachAxis(oldAxisX);
         scatterSeries->detachAxis(oldAxisX);
+        friisSeries->detachAxis(oldAxisX);
+        sigmaPlusSeries->detachAxis(oldAxisX);
+        sigmaMinusSeries->detachAxis(oldAxisX);
         fitSeries->detachAxis(oldAxisX);
 
         // 3. Remove and delete the old axis
@@ -1376,6 +1483,9 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
             minLimitSeries->attachAxis(newAxisX);
             maxLimitSeries->attachAxis(newAxisX);
             scatterSeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+            sigmaPlusSeries->attachAxis(newAxisX);
+            sigmaMinusSeries->attachAxis(newAxisX);
             fitSeries->attachAxis(newAxisX);
 
         } else {
@@ -1394,6 +1504,9 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
             minLimitSeries->attachAxis(newAxisX);
             maxLimitSeries->attachAxis(newAxisX);
             scatterSeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+            sigmaPlusSeries->attachAxis(newAxisX);
+            sigmaMinusSeries->attachAxis(newAxisX);
             fitSeries->attachAxis(newAxisX);
         }
     });
