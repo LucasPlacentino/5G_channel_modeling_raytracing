@@ -69,7 +69,6 @@ private:
 
     void toggleCellParametersLayout(bool enabled);
     void toggleCoverageParametersLayout(bool enabled);
-    //void saveImage(QGraphicsView *view, bool isValidation);
     // Put the default argument here, just use nullptr for safety
     void saveImage(QGraphicsView* view = nullptr, bool isValidation = false);
 };

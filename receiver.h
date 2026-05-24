@@ -31,7 +31,6 @@ public:
 
     Receiver(qreal x, qreal y, qreal resolution, bool showOutline = false);
 
-    //QGraphicsRectItem* graphics = new QGraphicsRectItem(); // RX's QGraphicsItem
     // It must be initialized in receiver.cpp
     QGraphicsRectItem* graphics; // RX's QGraphicsItem
     
@@ -41,7 +40,6 @@ public:
     qreal Ra = 73; // antenna resistance
     QColor cell_color = QColor(Qt::transparent); // receiver cell color, based on power/bitrate
 
-    // Add this to your public variables in receiver.h
     int connected_tx_selector_index = -1; // new
     Transmitter* connected_tx = nullptr; // new
 

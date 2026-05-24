@@ -10,14 +10,12 @@
 #include "receiver.h"
 #include "transmitter.h"
 
-// new: for TDL on cell click
+// new: for TDL/PDP on cell click
 #include <QObject>
 #include <QEvent>
 #include <QGraphicsSceneMouseEvent>
 #include <QChartView>
 
-// class Simulation: public QObject {
-//     Q_OBJECT // Required macro for Qt event system
 class Simulation {
 public:
     Simulation(bool show = true); // constructor
@@ -82,9 +80,6 @@ private:
     void showView();
     void addLegend(QGraphicsScene* scene);
 
-// new: for TDL on cell click
-// protected:
-//     bool eventFilter(QObject *obj, QEvent *event) override;
 };
 
 #endif // SIMULATION_H

@@ -53,7 +53,7 @@ QWidget* createTwoRayValidationPlot() {
     otgPen.setWidth(2);
     otgSeries->setPen(otgPen);
 
-    double max_dist = 100000.0;
+    double max_dist = 100000.0; // /!\ QUITE SLOW !!!
     //int num_points = 2000; // High resolution needed to capture high-frequency 26 GHz fringes
     int num_points = 200000; // for increased max dist to 10000m
     double step = max_dist / num_points;

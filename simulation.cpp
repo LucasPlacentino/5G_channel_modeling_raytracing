@@ -40,45 +40,6 @@ void Simulation::createWalls()
         this->obstacles.clear();
     }
 
-    // QList<Obstacle*> boundary_walls;
-    // ObstacleType generic_material = GenericWall;
-    // qreal boundary_thickness = 0.3; // 30cm
-
-    // // Top wall
-    // boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(max_x,0), generic_material, boundary_thickness));
-    // // Right wall
-    // boundary_walls.append(new Obstacle(QVector2D(max_x,0), QVector2D(max_x,max_y), generic_material, boundary_thickness));
-    // // Bottom wall
-    // boundary_walls.append(new Obstacle(QVector2D(0,max_y), QVector2D(max_x,max_y), generic_material, boundary_thickness));
-    // // Left wall
-    // boundary_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,max_y), generic_material, boundary_thickness));
-
-
-    // // --- Interior Generic Walls (120x70m Layout) ---
-    // QList<Obstacle*> interior_walls;
-    // qreal interior_thickness = 0.3; // 30cm
-    // // We reuse generic_material and thickness (0.3m) from your boundary setup
-    // // 1. Top corridor wall (Y=30), broken up by 4m doorways
-    // interior_walls.append(new Obstacle(QVector2D(10, 30), QVector2D(28, 30), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(32, 30), QVector2D(68, 30), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(72, 30), QVector2D(110, 30), generic_material, interior_thickness));
-    // // 2. Bottom corridor wall (Y=40), broken up by 4m doorways (staggered from top)
-    // interior_walls.append(new Obstacle(QVector2D(10, 40), QVector2D(38, 40), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(42, 40), QVector2D(78, 40), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(82, 40), QVector2D(110, 40), generic_material, interior_thickness));
-    // // 3. Top vertical dividers (separating the Y=0 to Y=30 region into 3 large zones)
-    // interior_walls.append(new Obstacle(QVector2D(30, 0), QVector2D(30, 30), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(70, 0), QVector2D(70, 30), generic_material, interior_thickness));
-    // // 4. Bottom vertical dividers (separating the Y=40 to Y=70 region into 3 large zones)
-    // interior_walls.append(new Obstacle(QVector2D(40, 40), QVector2D(40, 70), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(80, 40), QVector2D(80, 70), generic_material, interior_thickness));
-    // // 5. Central solid block (e.g., concrete elevator core or stairwell) inside the corridor
-    // interior_walls.append(new Obstacle(QVector2D(50, 32), QVector2D(60, 32), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(60, 32), QVector2D(60, 38), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(60, 38), QVector2D(50, 38), generic_material, interior_thickness));
-    // interior_walls.append(new Obstacle(QVector2D(50, 38), QVector2D(50, 32), generic_material, interior_thickness));
-
-
     // --- Outdoor Urban Environment (120x70m Layout) ---
     QList<Obstacle*> urban_walls;
     ObstacleType building_material = GenericWall; 
@@ -111,46 +72,8 @@ void Simulation::createWalls()
     urban_walls.append(new Obstacle(QVector2D(70, 55), QVector2D(85, 55), building_material, thickness)); // Plaza North boundary
     urban_walls.append(new Obstacle(QVector2D(70, 55), QVector2D(70, 70), building_material, thickness)); // West facing main
 
-
-    // // Add obstacles:
-    // QList<Obstacle*> concrete_walls;
-    // ObstacleType concrete = ConcreteWall;
-    // thickness = 0.3; // 30cm
-    // concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(15,0), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(15,0), QVector2D(15,4), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(7,0), QVector2D(7,4), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(0,0), QVector2D(0,8), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(0,8), QVector2D(6,8), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(4,6), QVector2D(9,6), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(4,6), QVector2D(4,8), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(9,6), QVector2D(9,8), concrete, thickness));
-    // concrete_walls.append(new Obstacle(QVector2D(9,8), QVector2D(12,8), concrete, thickness));
-
-    // QList<Obstacle*> drywall_walls;
-    // ObstacleType drywall = DryWall;
-    // thickness=0.1; // 10cm
-    // drywall_walls.append(new Obstacle(QVector2D(4,0), QVector2D(4,4), drywall, thickness));
-    // drywall_walls.append(new Obstacle(QVector2D(4,4), QVector2D(5,4), drywall, thickness));
-    // drywall_walls.append(new Obstacle(QVector2D(6,4), QVector2D(9,4), drywall, thickness));
-    // drywall_walls.append(new Obstacle(QVector2D(10,4), QVector2D(11,4), drywall, thickness));
-    // drywall_walls.append(new Obstacle(QVector2D(11,0), QVector2D(11,4), drywall, thickness));
-    // drywall_walls.append(new Obstacle(QVector2D(0,5), QVector2D(4,5), drywall, thickness));
-
-    // thickness=0.05; // 5cm
-    // Obstacle* glass_window = new Obstacle(QVector2D(12,8),QVector2D(15,4), Window, thickness); // this one is diagonal
-
-    // thickness=0.05; // 5cm
-    // Obstacle* metal_lift_door = new Obstacle(QVector2D(6,6),QVector2D(6,8), MetalWall, thickness);
-
-    // // /!\ The lift is only added to the obstacles if enabled
     QList<Obstacle*> all_obstacles;
 
-    // all_obstacles.append(concrete_walls);
-    // all_obstacles.append(drywall_walls);
-    // all_obstacles.append(glass_window);
-    // all_obstacles.append(metal_lift_door); // last one is the metal lift door
-
-    // TODO:
     //all_obstacles.append(boundary_walls);
     //all_obstacles.append(interior_walls);
     all_obstacles.append(urban_walls);
@@ -184,7 +107,7 @@ void Simulation::run(QProgressBar* progress_bar)
     }
 
     this->timer.start();
-    qDebug() << "Simulation::run() - single cell simulation: " << (this->showRaySingleCell); // still TODO: single cell simulation
+    qDebug() << "Simulation::run() - single cell simulation: " << (this->showRaySingleCell);
 
     qDebug() << "P_TX:" << P_TX << "W," << P_TX_dBm << "dBm";
     qDebug() << "G_TX:" << G_TX;
@@ -486,32 +409,10 @@ void Simulation::computeDirect(Receiver* _RX, const QVector2D& _TX, int tx_selec
     _RX->all_rays.append(direct_ray);
 }
 
-// complex<qreal> Simulation::computePerpendicularGamma(qreal _cos_theta_i, qreal _cos_theta_t, Obstacle* wall)
-// {
-//     // returns Gamma_perpendicular
-//     complex<qreal> left = wall->properties.Z_m * _cos_theta_i;
-//     //qDebug() << "left perpGamma:" << left.real() << "+j" << left.imag();
-//     complex<qreal> right = Z_0 * _cos_theta_t;
-//     //qDebug() << "right perpGamma:" << right.real() << "+j" << right.imag();
-//     //complex<qreal> Gamma_perp = (wall->properties.Z_m*_cos_theta_i-Z_0*_cos_theta_t)/(wall->properties.Z_m*_cos_theta_i+Z_0*_cos_theta_t);
-//     complex<qreal> Gamma_perp = (left - right) / (left + right);
-
-//     //qDebug() << "Gamma_perp=" << QString::number(Gamma_perp.real()) << "+j" << QString::number(Gamma_perp.imag());
-//     return Gamma_perp;
-// }
 
 complex<qreal> Simulation::computeReflectionCoeff(qreal _cos_theta_i, qreal _sin_theta_i, qreal _cos_theta_t, qreal _sin_theta_t, Obstacle* wall)
 {
     // returns the reflection coefficient Gamma_m
-
-    // qreal s = wall->thickness/_cos_theta_t;
-    // complex<qreal> Gamma_perpendicular = computePerpendicularGamma(_cos_theta_i, _cos_theta_t, wall);
-    // complex<qreal> reflection_term = exp(-2.0 * wall->properties.gamma_m * s) * exp(j * 2.0 * beta_0 * s * _sin_theta_t * _sin_theta_i);
-    // //qDebug() << "reflection_term:" << QString::number(reflection_term.real()) << "+ j" << QString::number(reflection_term.imag());
-    // complex<qreal> Gamma_m = Gamma_perpendicular - (1.0 - pow((Gamma_perpendicular), 2)) * (Gamma_perpendicular * reflection_term) / (1.0 - pow((Gamma_perpendicular), 2) * reflection_term);
-    // //qDebug() << "Gamma_m:" << QString::number(Gamma_m.real()) << "+ j" << QString::number(Gamma_m.imag());
-
-    // return Gamma_m;
 
     // Assume walls are dielectric slabs (depends on the Fresnel reflection coefficient of the interface and the slab's thickness and material properties):
     qreal eps_r = wall->properties.relative_permittivity;
@@ -532,18 +433,6 @@ complex<qreal> Simulation::computeReflectionCoeff(qreal _cos_theta_i, qreal _sin
 complex<qreal> Simulation::computeTransmissionCoeff(qreal _cos_theta_i, qreal _sin_theta_i, qreal _cos_theta_t, qreal _sin_theta_t, Obstacle* wall)
 {
     // returns the transmission coefficient T_m
-
-    // //qDebug() << "_cos_theta_i" << _cos_theta_i;
-    // //qDebug() << "_sin_theta_i" << _sin_theta_i;
-    // //qDebug() << "_sin_theta_t" << _sin_theta_t;
-    // //qDebug() << "_cos_theta_t" << _cos_theta_t;
-    // qreal s = wall->thickness/_cos_theta_t;
-    // //qDebug() << "s" << s;
-    // complex<qreal> perpGamma = computePerpendicularGamma(_cos_theta_i, _cos_theta_t, wall);
-    // //qDebug() << "perpGamma" << perpGamma.real() << "+j" << perpGamma.imag();
-    // complex<qreal> T_m = ((1.0-pow(perpGamma,2))*exp(-(wall->properties.gamma_m)*s))/(1.0-(pow(perpGamma,2)*exp(-2.0*(wall->properties.gamma_m)*s)*exp(j*beta_0*2.0*s*_sin_theta_t*_sin_theta_i)));
-    // //qDebug() << "TransmissionCoeff=" << QString::number(T_m.real()) << "+j" << QString::number(T_m.imag());
-    // return T_m;
 
     // Assume walls are dielectric slabs (depends on the Fresnel reflection coefficient of the interface and the slab's thickness and material properties):
     qreal eps_r = wall->properties.relative_permittivity;
@@ -672,7 +561,6 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
     qDebug() << "Creating graphics scene...";
 
     QGraphicsScene* scene = new QGraphicsScene();
-    //scene->installEventFilter(this); // new: TDL on cell click
 
     //Transmitter* TX = this->baseStations[0];
 
@@ -686,11 +574,7 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
             for (Transmitter* tx : std::as_const(this->baseStations)) {
                 qreal _pwr = RX->computeTotalPower(tx);
                 
-                // If it's the first transmitter, or it has higher power, update the best TX
-                // if (_best_tx_id == -1 || _pwr > _rx_power) {
-                //     _rx_power = _pwr;
-                //     _best_tx_id = tx->selector_index;
-                // }
+                // If it has higher power, update the best TX
                 if (_pwr > _rx_power) {
                     _rx_power = _pwr;
                     _best_tx = tx; 
@@ -708,10 +592,6 @@ QGraphicsScene *Simulation::createGraphicsScene()//std::vector<Transmitter>* TX)
                 RX->connected_tx = nullptr;
                 RX->connected_tx_selector_index = -1;
             }
-
-            //RX->connected_tx = _best_tx; // Save the pointer!
-            // RX->connected_tx_selector_index = _best_tx_id; // Save the connected BS ID
-            //RX->connected_tx_selector_index = _best_tx ? _best_tx->selector_index : -1; // Save the connected BS ID
 
             // Coverage Area Calculation:
             if (_best_tx != nullptr && _rx_power > 0.0) {
@@ -903,47 +783,6 @@ void Simulation::addLegend(QGraphicsScene* scene)
             scene->addItem(t);
         };
 
-        // // text for minimum of gradient (100 Mbps)
-        // //QGraphicsTextItem* min_text = new QGraphicsTextItem("-80dBm");
-        // QGraphicsTextItem* min_text = new QGraphicsTextItem(QString::number(min_bitrate_Mbps)+"Mbps");
-        // min_text->setPos(rect.bottomLeft().x()-6,rect.bottomLeft().y()+1);
-        // min_text->setDefaultTextColor(Qt::white);
-        // min_text->setScale(0.45);
-
-        // // text for quarter point (177.8 Mbps)
-        // qreal quarter_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.25*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
-        // QGraphicsTextItem* quarter_text = new QGraphicsTextItem(QString::number(quarter_bitrate_Mbps, 'f', 1)+"Mbps");
-        // quarter_text->setPos(rect.bottomLeft().x()+0.25*rect_width-6,rect.bottomLeft().y()+1);
-        // quarter_text->setDefaultTextColor(Qt::white);
-        // quarter_text->setScale(0.45);
-
-        // // text for middle point (316.2 Mbps)
-        // qreal middle_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.5*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
-        // QGraphicsTextItem* middle_text = new QGraphicsTextItem(QString::number(middle_bitrate_Mbps, 'f', 1)+"Mbps");
-        // middle_text->setPos(rect.bottomLeft().x()+0.5*rect_width-6,rect.bottomLeft().y()+1);
-        // middle_text->setDefaultTextColor(Qt::white);
-        // middle_text->setScale(0.45);
-
-        // // text for three-quarters point (562.3 Mbps)
-        // qreal three_quarters_bitrate_Mbps = pow(10.0, (log10(min_bitrate_Mbps) + 0.75*(log10(max_bitrate_Mbps)-log10(min_bitrate_Mbps))));
-        // QGraphicsTextItem* three_quarters_text = new QGraphicsTextItem(QString::number(three_quarters_bitrate_Mbps, 'f', 1)+"Mbps");
-        // three_quarters_text->setPos(rect.bottomLeft().x()+0.75*rect_width-6,rect.bottomLeft().y()+1);
-        // three_quarters_text->setDefaultTextColor(Qt::white);
-        // three_quarters_text->setScale(0.45);
-
-        // // text for maximum of gradient (1Gbps)
-        // //QGraphicsTextItem* max_text = new QGraphicsTextItem("-60dBm");
-        // QGraphicsTextItem* max_text = new QGraphicsTextItem(QString::number(max_bitrate_Mbps/1000)+"Gbps");
-        // max_text->setPos(rect.bottomRight().x()-6,rect.bottomRight().y()+1);
-        // max_text->setDefaultTextColor(Qt::white);
-        // max_text->setScale(0.45);
-
-        // scene->addItem(min_text);
-        // scene->addItem(quarter_text);
-        // scene->addItem(middle_text);
-        // scene->addItem(three_quarters_text);
-        // scene->addItem(max_text);
-
         // Draw small lines and text underneath the gradient
         for (int i=0; i<5; i++) {
             qreal x_pos = rect.bottomLeft().x() + 0.25 * i * bar_width;
@@ -1001,17 +840,6 @@ void Simulation::addLegend(QGraphicsScene* scene)
     y_label->setDefaultTextColor(Qt::white);
     scene->addItem(y_label);
 
-    // for (int x=0; x<=max_x; x++) { // draw markers x
-    //     QGraphicsLineItem* small_line = new QGraphicsLineItem(0+(x*10),-5,0+(x*10),-6);
-    //     small_line->setPen(legendPen);
-    //     QGraphicsTextItem* x_index = new QGraphicsTextItem(QString::number(x));
-    //     x_index->setPos(small_line->line().x2()-2.2,small_line->line().y2()-5.5);
-    //     x_index->setScale(0.25);
-    //     x_index->setDefaultTextColor(Qt::white);
-    //     scene->addItem(small_line);
-    //     scene->addItem(x_index);
-    // }
-
     // X-Axis markers:
     for (int x = 0; x <= max_x; x++) { 
         qreal tick_length = 2.0; // Small tick for every 1m
@@ -1037,17 +865,6 @@ void Simulation::addLegend(QGraphicsScene* scene)
             scene->addItem(x_index);
         }
     }
-    
-    // for (int y=0; y<=max_y; y++) { // draw markers y
-    //     QGraphicsLineItem* small_line = new QGraphicsLineItem(-5,0+(y*10),-6,0+(y*10));
-    //     small_line->setPen(legendPen);
-    //     QGraphicsTextItem* y_index = new QGraphicsTextItem(QString::number(y));
-    //     y_index->setPos(small_line->line().x2()-3.3,small_line->line().y2()-3);
-    //     y_index->setScale(0.25);
-    //     y_index->setDefaultTextColor(Qt::white);
-    //     scene->addItem(small_line);
-    //     scene->addItem(y_index);
-    // }
 
     // Y-Axis Markers:
     for (int y = 0; y <= max_y; y++) { 
@@ -1292,23 +1109,6 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     chart->legend()->setVisible(true);
     //chart->legend()->setAlignment(Qt::AlignBottom);
 
-    // // Detach from the default outside layout
-    // chart->legend()->detachFromChart();
-    // // semi-transparent white background
-    // chart->legend()->setBackgroundVisible(true);
-    // chart->legend()->setBrush(QBrush(QColor(255, 255, 255, 220)));
-    // chart->legend()->setPen(QPen(Qt::darkGray));
-    // // must set X, Y, Width, and Height manually.
-    // // X = 450, Y = 50, Width = 320, Height = 120
-    // // 1. Constrain width to exactly fit the text (forces left-alignment visually)
-    // qreal legendWidth = 240;
-    // qreal legendHeight = 110;
-    // // 2. Position it relative to the window size (800x600)
-    // qreal legendX = 850 - legendWidth - 30; // 500 (Tucked safely inside the right edge)
-    // qreal legendY = 70; // Pushed down to clear the chart title
-    // chart->legend()->setGeometry(QRectF(legendX, legendY, legendWidth, legendHeight));
-
-
     // -- hide threshold lines from legend
     const auto minMarkers = chart->legend()->markers(minLimitSeries);
     for (QLegendMarker *marker : minMarkers) {
@@ -1332,15 +1132,6 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     QFont font;
     font.setPointSize(12);
 
-    // // -- X-Axis (Logarithmic scale for Distance)
-    // QLogValueAxis *axisX = new QLogValueAxis();
-    // axisX->setTitleText("Distance (m) [Log Scale]");
-    // axisX->setTitleFont(font);
-    // axisX->setBase(10.0);
-    // axisX->setLabelFormat("%g");
-    // axisX->setRange(1.0, max_dist + 20.0); // Start at 1m reference distance
-    // chart->addAxis(axisX, Qt::AlignBottom);
-
     // -- X-Axis (Linear scale for Distance)
     // Round max distance up to the nearest 10 (e.g., 123m becomes 130m)
     QValueAxis *axisX = new QValueAxis();
@@ -1362,14 +1153,6 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     sigmaPlusSeries->attachAxis(axisX);
     sigmaMinusSeries->attachAxis(axisX);
     fitSeries->attachAxis(axisX);
-
-    // // -- Y-Axis (Linear scale for dBm)
-    // QValueAxis *axisY = new QValueAxis();
-    // axisY->setTitleText("Received Power (dBm)");
-    // axisY->setTitleFont(font);
-    // axisY->setRange(min_pwr - 5.0, max_pwr + 5.0);
-    // chart->addAxis(axisY, Qt::AlignLeft);
-    // scatterSeries->attachAxis(axisY);
 
     // -- Y-Axis (Linear scale for dBm)
     // Round min down to nearest 10, and max up to nearest 10

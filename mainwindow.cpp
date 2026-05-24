@@ -11,12 +11,6 @@
 #include "parameters.h"
 
 #include "simulation.h"
-//#include "validation.h" // old_validation
-#include "validation_free_space.h"
-#include "validation_single_reflection.h"
-#include "validation_double_reflection.h"
-#include "validation_triple_reflection.h"
-//#include "validation_recursive.h"
 
 #include "validate_freespace.h"
 #include "validate_wall.h"
