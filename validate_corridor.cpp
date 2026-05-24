@@ -165,6 +165,8 @@ QWidget* createThreeReflectionValidationPlot() {
         double W = 5.0 * scale;
         double d = 50.0 * scale;
 
+        // Drawn manually
+
         // Walls (Y = W and Y = -W)
         scene->addLine(0, W, d, W, QPen(Qt::black, 3));
         scene->addLine(0, -W, d, -W, QPen(Qt::black, 3));
