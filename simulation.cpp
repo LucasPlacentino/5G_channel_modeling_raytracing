@@ -1191,7 +1191,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         sigmaPen.setStyle(Qt::DotLine);
         sigmaPlusSeries->setPen(sigmaPen);
         sigmaMinusSeries->setPen(sigmaPen);
-        //sigmaPlusSeries->setName(QString("+/- 1σ Shadowing (%1 dB)").arg(sigma_L, 0, 'f', 1));
+        //sigmaPlusSeries->setName(QString("+/- 1\u03C3 Shadowing (%1 dB)").arg(sigma_L, 0, 'f', 1));
         sigmaPlusSeries->setName(QString("\u00B11\u03C3 (Shadowing Variability \u03C3_L = %1 dB)")
                                      .arg(sigma_L, 0, 'f', 1));
 
