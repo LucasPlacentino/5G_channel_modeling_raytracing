@@ -1,8 +1,8 @@
 #ifndef VALIDATE_WALL_H
 #define VALIDATE_WALL_H
 
-#include <QChartView>
+#include <QWidget>
 
-QChartView* createTwoRayValidationPlot();
+QWidget* createTwoRayValidationPlot();
 
 #endif // VALIDATE_WALL_H

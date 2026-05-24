@@ -1,13 +1,16 @@
 #include "validate_wall.h"
+#include "validate_common_utils.h"
 
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
+#include <QFileDialog>
+#include <QPushButton>
 #include <QVBoxLayout>
 #include <cmath>
 #include <complex>
 
-QChartView* createTwoRayValidationPlot() {
+QWidget* createTwoRayValidationPlot() {
     // 1. Simulation Parameters
     constexpr double freq = 26e9; // 26 GHz
     constexpr double c = 3e8;
@@ -104,9 +107,54 @@ QChartView* createTwoRayValidationPlot() {
     friisSeries->attachAxis(axisY);
     twoRaySeries->attachAxis(axisY);
 
+    // 3. Create the UI Window
     QChartView *chartView = new QChartView(chart);
     chartView->setRenderHint(QPainter::Antialiasing);
-    chartView->setMinimumSize(800, 600);
-    return chartView;
+
+    QWidget *window = new QWidget();
+    window->setWindowTitle("Validation: Two-Ray");
+    window->resize(800, 600);
+    window->setAttribute(Qt::WA_DeleteOnClose);
+
+    QVBoxLayout *mainLayout = new QVBoxLayout(window);
+    mainLayout->addWidget(chartView, 1);
+
+    QHBoxLayout *buttonLayout = new QHBoxLayout();
+    QPushButton *btnSavePng = new QPushButton("Save Chart PNG");
+    QPushButton *btnScene = new QPushButton("View 2D Scene Snapshot (d=50m)");
+    buttonLayout->addWidget(btnSavePng);
+    buttonLayout->addWidget(btnScene);
+    mainLayout->addLayout(buttonLayout);
+
+    QObject::connect(btnSavePng, &QPushButton::clicked, [window, chartView]() {
+        QString fileName = QFileDialog::getSaveFileName(window, "Save Chart", "", "PNG Image (*.png)");
+        if (!fileName.isEmpty()) chartView->grab().save(fileName);
+    });
+
+    QObject::connect(btnScene, &QPushButton::clicked, []() {
+        QGraphicsScene* scene = new QGraphicsScene();
+        double scale = 10.0;
+        double w = 5.0 * scale; // Wall at Y = 5m
+        double d = 50.0 * scale;
+
+        // Wall
+        scene->addLine(0, w, d, w, QPen(Qt::black, 3));
+
+        // TX and RX
+        scene->addEllipse(-5, -5, 10, 10, QPen(Qt::red), QBrush(Qt::red));
+        scene->addEllipse(d-5, -5, 10, 10, QPen(Qt::blue), QBrush(Qt::blue));
+
+        // Direct Ray
+        scene->addLine(0, 0, d, 0, QPen(Qt::green, 1, Qt::DashLine));
+
+        // Reflected Ray (Specular point is exactly at d/2 due to symmetry)
+        scene->addLine(0, 0, d/2, w, QPen(Qt::magenta, 2));
+        scene->addLine(d/2, w, d, 0, QPen(Qt::magenta, 2));
+
+        scene->setSceneRect(-20, -20, d + 40, w + 40);
+        showValidationScene(scene, "Two-Ray Geometry Snapshot (d=50m)");
+    });
+
+    return window;
 }
 

@@ -17,6 +17,12 @@
 #include "validation_double_reflection.h"
 #include "validation_triple_reflection.h"
 //#include "validation_recursive.h"
+
+#include "validate_freespace.h"
+#include "validate_wall.h"
+#include "validate_corridor.h"
+QWidget* Validate_view;
+
 QGraphicsView* Validation_view;
 QChartView* plot_view;
 
@@ -417,29 +423,37 @@ void MainWindow::on_cellYspinBox_valueChanged(double y)
 
 void MainWindow::on_actionRun_Free_Space_Validation_triggered()
 {
-    Validation_view = runFreeSpaceValidation();
+    //Validation_view = runFreeSpaceValidation();
+    qDebug() << "Running Free Space Validation...";
+    Validate_view = createFreeSpaceValidationPlot();
+    Validate_view->show();
     //runFreeSpaceValidation();
 }
 
 
-
-
 void MainWindow::on_actionRun_Single_Reflection_Validation_triggered()
 {
-    Validation_view = runSingleReflectionValidation();
+    //Validation_view = runSingleReflectionValidation();
+    qDebug() << "Running Single Reflection Validation...";
+    Validate_view = createTwoRayValidationPlot();
+    Validate_view->show();
     //runSingleReflectionValidation();
 }
 
 
 void MainWindow::on_actionRun_Double_Reflection_Validation_triggered()
 {
-    Validation_view = runDoubleReflectionValidation();
+    qDebug() << "Running Double Reflection Validation...";
+    //Validation_view = runDoubleReflectionValidation();
 }
 
 
 void MainWindow::on_actionRun_Triple_Reflection_Validation_triggered()
 {
-    Validation_view = runTripleReflectionValidation();
+    //Validation_view = runTripleReflectionValidation();
+    qDebug() << "Running Triple Reflection (Corridor) Validation...";
+    Validate_view = createThreeReflectionValidationPlot();
+    Validate_view->show();
 }
 
 

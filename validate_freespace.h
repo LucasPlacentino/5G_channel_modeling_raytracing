@@ -1,9 +1,9 @@
 #ifndef VALIDATE_FREESPACE_H
 #define VALIDATE_FREESPACE_H
 
-#include <QChartView>
+#include <QWidget>
 
 
-QChartView* createFreeSpaceValidationPlot();
+QWidget* createFreeSpaceValidationPlot();
 
 #endif // VALIDATE_FREESPACE_H

@@ -40,6 +40,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         resources.qrc
         validate_freespace.h validate_freespace.cpp
         validate_wall.h validate_wall.cpp
+        validate_corridor.h validate_corridor.cpp
+        validate_common_utils.h validate_common_utils.cpp
 
 
 
