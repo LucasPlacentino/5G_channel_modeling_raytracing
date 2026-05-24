@@ -791,7 +791,7 @@
     <string>About</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+I</string>
+    <string>Ctrl+A</string>
    </property>
   </action>
   <action name="actionSave_image">
@@ -840,6 +840,9 @@
    </property>
   </action>
   <action name="actionRun_Recursive_Validation">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Run Recursive Validation</string>
    </property>
