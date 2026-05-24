@@ -191,9 +191,14 @@ void MainWindow::on_actionAbout_triggered()
 
 void MainWindow::saveImage(QGraphicsView* target_view, bool isValidation) // bool isValidation not used
 {
-    // Resolve default argument
+    //// Resolve default argument
+    //if (target_view == nullptr) {
+    //    if (simulation.view == nullptr) return;
+    //    target_view = simulation.view;
+    //}
     if (target_view == nullptr) {
-        target_view = simulation.view;
+        qWarning() << "No view, cannot save image.";
+        return;
     }
 
     if (!target_view || !target_view->scene()) {
@@ -249,7 +254,6 @@ void MainWindow::on_actionSave_image_triggered()
         return;
     }
     saveImage(simulation.view);
-    if (plot_view != nullptr) saveImage(plot_view);
 }
 
 

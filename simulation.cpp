@@ -1085,7 +1085,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         return nullptr;
     }
     QScatterSeries *scatterSeries = new QScatterSeries();
-    scatterSeries->setName("Simulated Receiver UE");
+    scatterSeries->setName("Simulated UE");
     scatterSeries->setMarkerShape(QScatterSeries::MarkerShapeCircle);
     scatterSeries->setMarkerSize(4.0);
     
@@ -1183,7 +1183,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         //fitSeries->setName(QString("Fit: Path loss exponent (n) = %1").arg(n, 0, 'f', 2));
         //fitSeries->setName(QString("Empirical fit: < P_RX(1m) > = %1 dBm, n = %2")
                                //.arg(C, 0, 'f', 1)
-        fitSeries->setName(QString("Empirical fit: n = %1")
+        fitSeries->setName(QString("Empirical fit (n = %1)")
                                .arg(n, 0, 'f', 2));
 
         QPen sigmaPen(Qt::green);
@@ -1192,7 +1192,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
         sigmaPlusSeries->setPen(sigmaPen);
         sigmaMinusSeries->setPen(sigmaPen);
         //sigmaPlusSeries->setName(QString("+/- 1σ Shadowing (%1 dB)").arg(sigma_L, 0, 'f', 1));
-        sigmaPlusSeries->setName(QString("Shadowing Variability \u03C3_L = %1 dB")
+        sigmaPlusSeries->setName(QString("\u00B11\u03C3 (Shadowing Variability \u03C3_L = %1 dB)")
                                      .arg(sigma_L, 0, 'f', 1));
 
         QPen friisPen;
@@ -1275,9 +1275,9 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     // "top" layer
     chart->addSeries(scatterSeries); // painted 4th
     chart->addSeries(friisSeries);
+    chart->addSeries(fitSeries);
     chart->addSeries(sigmaPlusSeries);
     chart->addSeries(sigmaMinusSeries);
-    chart->addSeries(fitSeries);
     //
     chart->addSeries(nearFieldArea);
 
@@ -1290,23 +1290,23 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     chart->setTitleFont(titleFont);
 
     chart->legend()->setVisible(true);
-    chart->legend()->setAlignment(Qt::AlignBottom);
+    //chart->legend()->setAlignment(Qt::AlignBottom);
 
-    // Detach from the default outside layout
-    chart->legend()->detachFromChart();
-    // semi-transparent white background
-    chart->legend()->setBackgroundVisible(true);
-    chart->legend()->setBrush(QBrush(QColor(255, 255, 255, 220)));
-    chart->legend()->setPen(QPen(Qt::darkGray));
-    // must set X, Y, Width, and Height manually.
-    // X = 450, Y = 50, Width = 320, Height = 120
-    // 1. Constrain width to exactly fit the text (forces left-alignment visually)
-    qreal legendWidth = 240;
-    qreal legendHeight = 110;
-    // 2. Position it relative to the window size (800x600)
-    qreal legendX = 850 - legendWidth - 30; // 500 (Tucked safely inside the right edge)
-    qreal legendY = 70; // Pushed down to clear the chart title
-    chart->legend()->setGeometry(QRectF(legendX, legendY, legendWidth, legendHeight));
+    // // Detach from the default outside layout
+    // chart->legend()->detachFromChart();
+    // // semi-transparent white background
+    // chart->legend()->setBackgroundVisible(true);
+    // chart->legend()->setBrush(QBrush(QColor(255, 255, 255, 220)));
+    // chart->legend()->setPen(QPen(Qt::darkGray));
+    // // must set X, Y, Width, and Height manually.
+    // // X = 450, Y = 50, Width = 320, Height = 120
+    // // 1. Constrain width to exactly fit the text (forces left-alignment visually)
+    // qreal legendWidth = 240;
+    // qreal legendHeight = 110;
+    // // 2. Position it relative to the window size (800x600)
+    // qreal legendX = 850 - legendWidth - 30; // 500 (Tucked safely inside the right edge)
+    // qreal legendY = 70; // Pushed down to clear the chart title
+    // chart->legend()->setGeometry(QRectF(legendX, legendY, legendWidth, legendHeight));
 
 
     // -- hide threshold lines from legend
@@ -1405,7 +1405,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
 
     QWidget *window = new QWidget();
     window->setWindowTitle("Path Loss Analysis");
-    window->resize(800, 600);
+    window->resize(1000, 600);
     window->setAttribute(Qt::WA_DeleteOnClose);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(window);
