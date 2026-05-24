@@ -25,7 +25,8 @@ static constexpr qreal lambda = wavelength;
 static const qreal Z_0 = sqrt(mu_0 / epsilon_0); // vacuum impedance
 
 static constexpr qreal epsilon_r = 4; // relative permittivity of ALL materials
-static constexpr qreal sigma_cond = 0; // lossless material (to use dielectric slab model for walls)
+static constexpr qreal sigma_cond = 0.0; // lossless material (to use dielectric slab model for walls)
+//static constexpr qreal sigma_cond = 1;
 
 /*
  Sensitivity | Bit rate
