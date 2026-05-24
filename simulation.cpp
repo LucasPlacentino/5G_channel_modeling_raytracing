@@ -1445,7 +1445,7 @@ QChartView* Simulation::showPathLossScatterPlot() // ONLY IF 1 BS !
     QObject::connect(btnToggleX, &QPushButton::clicked, [chart, scatterSeries, minLimitSeries, maxLimitSeries, nearFieldArea, friisSeries, sigmaPlusSeries, sigmaMinusSeries, fitSeries, font, max_dist, x_max_rounded]() {
 
         // 1. Get the current X-Axis
-        QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).first();
+        QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).at(0); // or .constFirst(); rather than .first()
         bool isCurrentlyLinear = (oldAxisX->type() == QAbstractAxis::AxisTypeCategory || oldAxisX->type() == QAbstractAxis::AxisTypeValue);
 
         // 2. Detach old axis from ALL series
