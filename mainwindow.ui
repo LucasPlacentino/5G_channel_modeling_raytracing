@@ -744,7 +744,7 @@
    </widget>
    <widget class="QMenu" name="menuValidation_Simulation">
     <property name="title">
-     <string>Validation-Simulation</string>
+     <string>Validations</string>
     </property>
     <addaction name="actionRun_Free_Space_Validation"/>
     <addaction name="actionRun_Single_Reflection_Validation"/>
