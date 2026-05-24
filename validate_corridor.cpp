@@ -5,6 +5,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QFileDialog>
+#include <QLogValueAxis>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <cmath>
@@ -53,7 +54,7 @@ QWidget* createThreeReflectionValidationPlot() {
 
     // 2. Generate Theoretical Data
     QLineSeries *corridorSeries = new QLineSeries();
-    corridorSeries->setName("Corridor/Canyon (up to 3 reflections, dielectric slab model for walls)");
+    corridorSeries->setName("Corridor/Canyon (up to 3 reflections)");
     QPen corridorPen(Qt::red);
     corridorPen.setWidth(2);
     corridorSeries->setPen(corridorPen);
@@ -102,7 +103,7 @@ QWidget* createThreeReflectionValidationPlot() {
 
         corridorSeries->append(x, p_rx_dBm);
 
-        // Baseline FSPL
+        // Baseline friis
         double p_rx_friis = p_tx_dBm + g_tx_dB + g_rx_dB - 20.0 * std::log10((4.0 * M_PI * x) / lambda);
         friisSeries->append(x, p_rx_friis);
     }
@@ -111,7 +112,11 @@ QWidget* createThreeReflectionValidationPlot() {
     QChart *chart = new QChart();
     chart->addSeries(corridorSeries);
     chart->addSeries(friisSeries);
-    chart->setTitle("Validation: 3-Reflection Corridor with Dielectric Slab (26 GHz)");
+    chart->setTitle("Validation: 3-Reflection Corridor with Dielectric Slab modeled Walls (26 GHz)");
+    QFont titleFont = chart->titleFont();
+    titleFont.setPointSize(16);
+    titleFont.setBold(true);
+    chart->setTitleFont(titleFont);
 
     QValueAxis *axisX = new QValueAxis();
     axisX->setTitleText("Distance (m)");
@@ -143,6 +148,8 @@ QWidget* createThreeReflectionValidationPlot() {
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *btnSavePng = new QPushButton("Save Chart PNG");
     QPushButton *btnScene = new QPushButton("View 2D Scene Snapshot (d=50m)");
+    QPushButton *btnToggleAxis = new QPushButton("Toggle X-Axis (Log/Linear)");
+    buttonLayout->addWidget(btnToggleAxis);
     buttonLayout->addWidget(btnSavePng);
     buttonLayout->addWidget(btnScene);
     mainLayout->addLayout(buttonLayout);
@@ -186,6 +193,37 @@ QWidget* createThreeReflectionValidationPlot() {
 
         scene->setSceneRect(-20, -W - 20, d + 40, 2*W + 40);
         showValidationScene(scene, "3-Reflection Geometry Snapshot (d=50m)");
+    });
+
+    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, corridorSeries, friisSeries]() {
+        QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).constFirst();
+        bool isLog = (oldAxisX->type() == QAbstractAxis::AxisTypeLogValue);
+
+        corridorSeries->detachAxis(oldAxisX);
+        friisSeries->detachAxis(oldAxisX);
+
+        chart->removeAxis(oldAxisX);
+        delete oldAxisX;
+
+        if (isLog) {
+            QValueAxis *newAxisX = new QValueAxis();
+            newAxisX->setTitleText("Distance (m)");
+            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setTickCount(11);
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+            corridorSeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+        } else {
+            QLogValueAxis *newAxisX = new QLogValueAxis();
+            newAxisX->setTitleText("Distance (m) [Log Scale]");
+            newAxisX->setBase(10.0);
+            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setMinorTickCount(8);
+            newAxisX->setLabelFormat("%g");
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+            corridorSeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+        }
     });
 
     return window;

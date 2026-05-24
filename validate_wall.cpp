@@ -5,6 +5,7 @@
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QValueAxis>
 #include <QFileDialog>
+#include <QLogValueAxis>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <cmath>
@@ -88,7 +89,11 @@ QWidget* createTwoRayValidationPlot() {
     QChart *chart = new QChart();
     chart->addSeries(twoRaySeries);
     chart->addSeries(friisSeries);
-    chart->setTitle("Validation: Two-Ray Interference Pattern (26 GHz)");
+    chart->setTitle("Validation: Single Reflection Path (26 GHz)");
+    QFont titleFont = chart->titleFont();
+    titleFont.setPointSize(16);
+    titleFont.setBold(true);
+    chart->setTitleFont(titleFont);
 
     // X-Axis (Linear to clearly see the spatial frequency of the fringes)
     QValueAxis *axisX = new QValueAxis();
@@ -122,6 +127,8 @@ QWidget* createTwoRayValidationPlot() {
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *btnSavePng = new QPushButton("Save Chart PNG");
     QPushButton *btnScene = new QPushButton("View 2D Scene Snapshot (d=50m)");
+    QPushButton *btnToggleAxis = new QPushButton("Toggle X-Axis (Log/Linear)");
+    buttonLayout->addWidget(btnToggleAxis);
     buttonLayout->addWidget(btnSavePng);
     buttonLayout->addWidget(btnScene);
     mainLayout->addLayout(buttonLayout);
@@ -153,6 +160,37 @@ QWidget* createTwoRayValidationPlot() {
 
         scene->setSceneRect(-20, -20, d + 40, w + 40);
         showValidationScene(scene, "Two-Ray Geometry Snapshot (d=50m)");
+    });
+
+    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, twoRaySeries, friisSeries]() {
+        QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).constFirst();
+        bool isLog = (oldAxisX->type() == QAbstractAxis::AxisTypeLogValue);
+
+        twoRaySeries->detachAxis(oldAxisX);
+        friisSeries->detachAxis(oldAxisX);
+
+        chart->removeAxis(oldAxisX);
+        delete oldAxisX;
+
+        if (isLog) {
+            QValueAxis *newAxisX = new QValueAxis();
+            newAxisX->setTitleText("Distance (m)");
+            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setTickCount(11);
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+            twoRaySeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+        } else {
+            QLogValueAxis *newAxisX = new QLogValueAxis();
+            newAxisX->setTitleText("Distance (m) [Log Scale]");
+            newAxisX->setBase(10.0);
+            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setMinorTickCount(8);
+            newAxisX->setLabelFormat("%g");
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+            twoRaySeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+        }
     });
 
     return window;

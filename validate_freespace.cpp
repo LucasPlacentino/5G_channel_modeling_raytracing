@@ -75,6 +75,10 @@ QWidget* createFreeSpaceValidationPlot() {
     chart->addSeries(simSeries);
     chart->addSeries(friisSeries);
     chart->setTitle("Validation: Free-Space Propagation (26 GHz)");
+    QFont titleFont = chart->titleFont();
+    titleFont.setPointSize(16);
+    titleFont.setBold(true);
+    chart->setTitleFont(titleFont);
 
     // X-Axis (log scale to match slide 26)
     QLogValueAxis *axisX = new QLogValueAxis();
@@ -110,6 +114,8 @@ QWidget* createFreeSpaceValidationPlot() {
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     QPushButton *btnSavePng = new QPushButton("Save Chart PNG");
     QPushButton *btnScene = new QPushButton("View 2D Scene Snapshot (d=50m)");
+    QPushButton *btnToggleAxis = new QPushButton("Toggle X-Axis (Log/Linear)");
+    buttonLayout->addWidget(btnToggleAxis);
     buttonLayout->addWidget(btnSavePng);
     buttonLayout->addWidget(btnScene);
     mainLayout->addLayout(buttonLayout);
@@ -132,6 +138,41 @@ QWidget* createFreeSpaceValidationPlot() {
         scene->addLine(0, 0, d, 0, QPen(Qt::green, 1, Qt::DashLine));
 
         showValidationScene(scene, "Free-Space Geometry Snapshot (d=50m)");
+    });
+
+    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, simSeries, friisSeries]() {
+        // Use constFirst() to avoid Clazy detaching warnings
+        QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).constFirst();
+        bool isLog = (oldAxisX->type() == QAbstractAxis::AxisTypeLogValue);
+
+        // 1. Detach old axis
+        simSeries->detachAxis(oldAxisX);
+        friisSeries->detachAxis(oldAxisX);
+
+        // 2. Remove and delete
+        chart->removeAxis(oldAxisX);
+        delete oldAxisX;
+
+        // 3. Create and attach new axis
+        if (isLog) {
+            QValueAxis *newAxisX = new QValueAxis();
+            newAxisX->setTitleText("Distance (m)");
+            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setTickCount(11);
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+            simSeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+        } else {
+            QLogValueAxis *newAxisX = new QLogValueAxis();
+            newAxisX->setTitleText("Distance (m) [Log Scale]");
+            newAxisX->setBase(10.0);
+            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setMinorTickCount(8);
+            newAxisX->setLabelFormat("%g");
+            chart->addAxis(newAxisX, Qt::AlignBottom);
+            simSeries->attachAxis(newAxisX);
+            friisSeries->attachAxis(newAxisX);
+        }
     });
 
     return window;
