@@ -189,7 +189,7 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
 
         qreal d = ray->getTotalDistance();
 
-        // Coherent addition: E_n = E0 * (Coeffs) * exp(-j*beta*d) / d
+        // Choerent addition: E_n = E0 * (Coeffs) * exp(-j*beta*d) / d
         complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
         E_tot += E_ray;
     }
@@ -230,7 +230,7 @@ QMap<int, qreal> Receiver::computeTDL(Transmitter* transmitter)
 
         complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
 
-        // Add E-field coherently to the existing tap
+        // Add E-field coehrently to the existing tap
         complex_taps[tap_index] += E_ray;
     }
 
@@ -295,10 +295,11 @@ void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm)
     ////qreal tap_duration_ns = 5.0; // 1 / 200MHz = 5 ns
     qreal tap_duration_ns = 1 / (B/1e9);
     
-    // Variables for RMS Delay Spread
-    qreal sum_P = 0.0;
-    qreal sum_P_tau = 0.0;
-    qreal sum_P_tau2 = 0.0;
+    // variables for RMS Delay Spread ? no need
+    //qreal sum_P = 0.0;
+    //qreal sum_P_tau = 0.0;
+    //qreal sum_P_tau2 = 0.0;
+
     qreal max_power_dBm = -999.0;
 
     qreal max_delay_ns = 0.0; // ?
@@ -358,11 +359,11 @@ void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm)
         if (pwr_dBm > max_power_dBm) max_power_dBm = pwr_dBm;
         if (delay_ns > max_delay_ns) max_delay_ns = delay_ns;
 
-        // Convert back to linear mW for RMS math
-        qreal P_linear = std::pow(10.0, pwr_dBm / 10.0); 
-        sum_P += P_linear;
-        sum_P_tau += P_linear * delay_ns;
-        sum_P_tau2 += P_linear * std::pow(delay_ns, 2);
+        // convert back to linear mW for RMS math
+        //qreal P_linear = std::pow(10.0, pwr_dBm / 10.0);
+        //sum_P += P_linear;
+        //sum_P_tau += P_linear * delay_ns;
+        //sum_P_tau2 += P_linear * std::pow(delay_ns, 2);
 
         // Add peak dot to chart
         scatterSeries->append(delay_ns, pwr_dBm);
@@ -376,9 +377,9 @@ void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm)
         axisX->append(QString::number(delay_ns), delay_ns);
     }
 
-    // 2. Compute RMS Delay Spread
-    qreal mean_tau = sum_P_tau / sum_P;
-    qreal rms_delay_spread = qSqrt((sum_P_tau2 / sum_P) - qPow(mean_tau, 2));
+    // 2. compute RMS Delay Spread // no need
+    //qreal mean_tau = sum_P_tau / sum_P;
+    //qreal rms_delay_spread = qSqrt((sum_P_tau2 / sum_P) - qPow(mean_tau, 2));
 
     // // 3. Build the Chart
     // series->append(powerSet);
@@ -395,9 +396,10 @@ void showPDPChartWindow(const QMap<int, qreal>& pdp_dBm)
         marker->setVisible(false);
     }
     
-    // Title with Advanced Metrics
-    QString title = QString("Power Delay Profile (RMS Delay Spread: %1 ns)").arg(rms_delay_spread, 0, 'f', 2);
-    chart->setTitle(title);
+    // Title
+    //QString title = QString("Power Delay Profile (RMS Delay Spread: %1 ns)").arg(rms_delay_spread, 0, 'f', 2);
+    //chart->setTitle(title);
+    chart->setTitle("Power Delay Profile");
     // Increase Chart Title size
     QFont titleFont = chart->titleFont();
     titleFont.setPointSize(16); // Adjust size here (e.g., 14, 16, 18)
