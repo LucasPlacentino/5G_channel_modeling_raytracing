@@ -138,7 +138,7 @@ void Simulation::run(QProgressBar* progress_bar)
         // single cell simulation
         Receiver* rx = new Receiver(this->singleCellX,this->singleCellY,0.5, true);
         QPen singleCellPen = QPen(Qt::magenta);
-        singleCellPen.setWidthF(10*0.03);
+        singleCellPen.setWidthF(10*0.3);
         rx->graphics->setPen(singleCellPen);
         this->cells = {{rx}};
     }
@@ -808,7 +808,7 @@ void Simulation::addLegend(QGraphicsScene* scene)
     } else {
         QGraphicsTextItem* ray_colors = new QGraphicsTextItem("Green line: Direct ray\nRed line: One-reflection ray\nYellow line: Two-reflections ray\nCyan line: Three-reflections ray");
         ray_colors->setPos((max_x * 10) / 2.0 - 100.0, (max_y * 10) + 20);
-        ray_colors->setScale(0.4);
+        ray_colors->setScale(1);
         ray_colors->setDefaultTextColor(Qt::white);
         scene->addItem(ray_colors);
     }
