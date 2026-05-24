@@ -143,6 +143,9 @@
           <property name="text">
            <string>Run simulation</string>
           </property>
+          <property name="shortcut">
+           <string>Ctrl+E</string>
+          </property>
          </widget>
         </item>
         <item>
