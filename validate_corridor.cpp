@@ -65,8 +65,8 @@ QWidget* createThreeReflectionValidationPlot() {
     friisPen.setStyle(Qt::DashLine);
     friisSeries->setPen(friisPen);
 
-    double max_dist = 100.0;
-    int num_points = 2000;
+    double max_dist = 200.0;
+    int num_points = 4000;
     double step = max_dist / num_points;
 
     for (int i = 1; i <= num_points; i++) {
@@ -112,7 +112,7 @@ QWidget* createThreeReflectionValidationPlot() {
     QChart *chart = new QChart();
     chart->addSeries(corridorSeries);
     chart->addSeries(friisSeries);
-    chart->setTitle("Validation: 3-Reflection Corridor with Dielectric Slab modeled Walls (26 GHz)");
+    chart->setTitle("Validation: Up to 3-Reflection Urban Canyon with Dielectric Slab modeled Walls (26 GHz)");
     QFont titleFont = chart->titleFont();
     titleFont.setPointSize(16);
     titleFont.setBold(true);
@@ -120,7 +120,7 @@ QWidget* createThreeReflectionValidationPlot() {
 
     QValueAxis *axisX = new QValueAxis();
     axisX->setTitleText("Distance (m)");
-    axisX->setRange(1.0, 100.0);
+    axisX->setRange(1.0, max_dist);
     axisX->setTickCount(11);
     chart->addAxis(axisX, Qt::AlignBottom);
     friisSeries->attachAxis(axisX);
@@ -128,7 +128,7 @@ QWidget* createThreeReflectionValidationPlot() {
 
     QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("Received Power (dBm)");
-    axisY->setRange(-100.0, -40.0);
+    axisY->setRange(-110.0, -30.0);
     chart->addAxis(axisY, Qt::AlignLeft);
     friisSeries->attachAxis(axisY);
     corridorSeries->attachAxis(axisY);
@@ -138,7 +138,7 @@ QWidget* createThreeReflectionValidationPlot() {
     chartView->setRenderHint(QPainter::Antialiasing);
 
     QWidget *window = new QWidget();
-    window->setWindowTitle("Validation: 3-Reflection Corridor/Canyon");
+    window->setWindowTitle("Validation: Up to 3-Reflection Urban Canyon");
     window->resize(1000, 600);
     window->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -192,10 +192,10 @@ QWidget* createThreeReflectionValidationPlot() {
         scene->addLine(5*d/6, W, d, 0, QPen(Qt::darkYellow, 1));
 
         scene->setSceneRect(-20, -W - 20, d + 40, 2*W + 40);
-        showValidationScene(scene, "3-Reflection Geometry Snapshot (d=50m)");
+        showValidationScene(scene, "Urban Canyon Geometry Snapshot (d=50m), only showing half the rays (symmetric)");
     });
 
-    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, corridorSeries, friisSeries]() {
+    QObject::connect(btnToggleAxis, &QPushButton::clicked, [max_dist, chart, corridorSeries, friisSeries]() {
         QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).constFirst();
         bool isLog = (oldAxisX->type() == QAbstractAxis::AxisTypeLogValue);
 
@@ -208,7 +208,7 @@ QWidget* createThreeReflectionValidationPlot() {
         if (isLog) {
             QValueAxis *newAxisX = new QValueAxis();
             newAxisX->setTitleText("Distance (m)");
-            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setRange(1.0, max_dist);
             newAxisX->setTickCount(11);
             chart->addAxis(newAxisX, Qt::AlignBottom);
             corridorSeries->attachAxis(newAxisX);
@@ -217,7 +217,7 @@ QWidget* createThreeReflectionValidationPlot() {
             QLogValueAxis *newAxisX = new QLogValueAxis();
             newAxisX->setTitleText("Distance (m) [Log Scale]");
             newAxisX->setBase(10.0);
-            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setRange(1.0, max_dist);
             newAxisX->setMinorTickCount(8);
             newAxisX->setLabelFormat("%g");
             chart->addAxis(newAxisX, Qt::AlignBottom);
