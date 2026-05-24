@@ -58,6 +58,20 @@ QWidget* createTwoRayValidationPlot() {
     int num_points = 200000; // for increased max dist to 10000m
     double step = max_dist / num_points;
 
+    qreal min_y_range = -150.0;
+    qreal max_y_range = 60.0;
+
+    double d_breakpoint = 4 * M_PI * (w * w) / lambda;
+    // Create the vertical line series
+    QLineSeries *bpSeries = new QLineSeries();
+    bpSeries->setName(QString("Breakpoint (d = %1 m)").arg(d_breakpoint, 0, 'f', 1));
+    QPen bpPen(Qt::darkGray);
+    bpPen.setStyle(Qt::DotLine);
+    bpPen.setWidth(2);
+    bpSeries->setPen(bpPen);
+    bpSeries->append(d_breakpoint, min_y_range);
+    bpSeries->append(d_breakpoint, max_y_range);
+
     for (int i = 1; i <= num_points; i++) {
         double d_horizontal = i * step; // x-axis separation
 
@@ -104,6 +118,7 @@ QWidget* createTwoRayValidationPlot() {
     // 3. Build the Chart
     QChart *chart = new QChart();
     chart->addSeries(twoRaySeries);
+    chart->addSeries(bpSeries); // breakpoint line
     chart->addSeries(friisSeries);
     chart->addSeries(otgSeries);
     chart->setTitle("Validation: Single Reflection Path (26 GHz)");
@@ -121,16 +136,18 @@ QWidget* createTwoRayValidationPlot() {
     friisSeries->attachAxis(axisX);
     twoRaySeries->attachAxis(axisX);
     otgSeries->attachAxis(axisX);
+    bpSeries->attachAxis(axisX);
 
     // Y-Axis
     QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("Received Power (dBm)");
     //axisY->setRange(-110.0, -30.0); // Fixed bounds to clearly show the deep fades
-    axisY->setRange(-150.0, 60.0); // Raise the roof and lower the floor fro the super long distances
+    axisY->setRange(min_y_range, max_y_range); // Raise the roof and lower the floor fro the super long distances
     chart->addAxis(axisY, Qt::AlignLeft);
     friisSeries->attachAxis(axisY);
     twoRaySeries->attachAxis(axisY);
     otgSeries->attachAxis(axisY);
+    bpSeries->attachAxis(axisY);
 
     // 3. Create the UI Window
     QChartView *chartView = new QChartView(chart);
@@ -182,13 +199,14 @@ QWidget* createTwoRayValidationPlot() {
         showValidationScene(scene, "Single Reflection Geometry Snapshot (d=50m)");
     });
 
-    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, twoRaySeries, friisSeries, otgSeries]() {
+    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, twoRaySeries, friisSeries, otgSeries, bpSeries]() {
         QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).constFirst();
         bool isLog = (oldAxisX->type() == QAbstractAxis::AxisTypeLogValue);
 
         twoRaySeries->detachAxis(oldAxisX);
         friisSeries->detachAxis(oldAxisX);
         otgSeries->detachAxis(oldAxisX);
+        bpSeries->detachAxis(oldAxisX);
 
         chart->removeAxis(oldAxisX);
         delete oldAxisX;
@@ -202,6 +220,7 @@ QWidget* createTwoRayValidationPlot() {
             twoRaySeries->attachAxis(newAxisX);
             friisSeries->attachAxis(newAxisX);
             otgSeries->attachAxis(newAxisX);
+            bpSeries->attachAxis(newAxisX);
         } else {
             QLogValueAxis *newAxisX = new QLogValueAxis();
             newAxisX->setTitleText("Distance (m) [Log Scale]");
@@ -213,6 +232,7 @@ QWidget* createTwoRayValidationPlot() {
             twoRaySeries->attachAxis(newAxisX);
             friisSeries->attachAxis(newAxisX);
             otgSeries->attachAxis(newAxisX);
+            bpSeries->attachAxis(newAxisX);
         }
     });
 
