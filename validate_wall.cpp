@@ -29,21 +29,33 @@ QWidget* createTwoRayValidationPlot() {
     constexpr double epsilon_r = 4.0; // Relative permittivity of the wall
     constexpr double w = 5.0; // Perpendicular distance from TX/RX to the wall (meters)
 
-    // 2. Generate Theoretical Data
+    // 2. Generate Data
     QLineSeries *twoRaySeries = new QLineSeries();
     twoRaySeries->setName("Two-Ray Interference (Wall at 5m)");
     QPen twoRayPen(Qt::red);
     twoRayPen.setWidth(2);
     twoRaySeries->setPen(twoRayPen);
 
+    // -- Theoretical
+    // Friis
     QLineSeries *friisSeries = new QLineSeries(); // Baseline for comparison
     friisSeries->setName("Friis Free-Space (n=2)");
     QPen friisPen(Qt::blue);
-    friisPen.setStyle(Qt::DashLine);
+    friisPen.setStyle(Qt::DotLine);
+    friisPen.setWidth(2);
     friisSeries->setPen(friisPen);
 
-    double max_dist = 100.0;
-    int num_points = 2000; // High resolution needed to capture high-frequency 26 GHz fringes
+    // Over-The-Ground Asymptote (n=4)
+    QLineSeries *otgSeries = new QLineSeries();
+    otgSeries->setName("Over-the-Ground model (n=4)");
+    QPen otgPen(Qt::green);
+    otgPen.setStyle(Qt::DashLine);
+    otgPen.setWidth(2);
+    otgSeries->setPen(otgPen);
+
+    double max_dist = 100000.0;
+    //int num_points = 2000; // High resolution needed to capture high-frequency 26 GHz fringes
+    int num_points = 200000; // for increased max dist to 10000m
     double step = max_dist / num_points;
 
     for (int i = 1; i <= num_points; i++) {
@@ -80,15 +92,20 @@ QWidget* createTwoRayValidationPlot() {
 
         twoRaySeries->append(d_horizontal, p_rx_dBm);
 
-        // Compute baseline FSPL for plotting
+        // Compute Friis for plotting
         double p_rx_friis = p_tx_dBm + g_tx_dB + g_rx_dB - 20.0 * std::log10((4.0 * M_PI * d_horizontal) / lambda);
         friisSeries->append(d_horizontal, p_rx_friis);
+
+        // Compute Over-the-ground fro plotting
+        double p_rx_otg = p_tx_dBm + g_tx_dB + g_rx_dB + 40.0 * std::log10(w) - 40.0 * std::log10(d_horizontal);
+        otgSeries->append(d_horizontal, p_rx_otg);
     }
 
     // 3. Build the Chart
     QChart *chart = new QChart();
     chart->addSeries(twoRaySeries);
     chart->addSeries(friisSeries);
+    chart->addSeries(otgSeries);
     chart->setTitle("Validation: Single Reflection Path (26 GHz)");
     QFont titleFont = chart->titleFont();
     titleFont.setPointSize(16);
@@ -98,19 +115,22 @@ QWidget* createTwoRayValidationPlot() {
     // X-Axis (Linear to clearly see the spatial frequency of the fringes)
     QValueAxis *axisX = new QValueAxis();
     axisX->setTitleText("Distance (m)");
-    axisX->setRange(1.0, 100.0);
+    axisX->setRange(1.0, 100000.0);
     axisX->setTickCount(11);
     chart->addAxis(axisX, Qt::AlignBottom);
     friisSeries->attachAxis(axisX);
     twoRaySeries->attachAxis(axisX);
+    otgSeries->attachAxis(axisX);
 
     // Y-Axis
     QValueAxis *axisY = new QValueAxis();
     axisY->setTitleText("Received Power (dBm)");
-    axisY->setRange(-110.0, -30.0); // Fixed bounds to clearly show the deep fades
+    //axisY->setRange(-110.0, -30.0); // Fixed bounds to clearly show the deep fades
+    axisY->setRange(-150.0, 60.0); // Raise the roof and lower the floor fro the super long distances
     chart->addAxis(axisY, Qt::AlignLeft);
     friisSeries->attachAxis(axisY);
     twoRaySeries->attachAxis(axisY);
+    otgSeries->attachAxis(axisY);
 
     // 3. Create the UI Window
     QChartView *chartView = new QChartView(chart);
@@ -162,12 +182,13 @@ QWidget* createTwoRayValidationPlot() {
         showValidationScene(scene, "Single Reflection Geometry Snapshot (d=50m)");
     });
 
-    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, twoRaySeries, friisSeries]() {
+    QObject::connect(btnToggleAxis, &QPushButton::clicked, [chart, twoRaySeries, friisSeries, otgSeries]() {
         QAbstractAxis *oldAxisX = chart->axes(Qt::Horizontal).constFirst();
         bool isLog = (oldAxisX->type() == QAbstractAxis::AxisTypeLogValue);
 
         twoRaySeries->detachAxis(oldAxisX);
         friisSeries->detachAxis(oldAxisX);
+        otgSeries->detachAxis(oldAxisX);
 
         chart->removeAxis(oldAxisX);
         delete oldAxisX;
@@ -175,21 +196,23 @@ QWidget* createTwoRayValidationPlot() {
         if (isLog) {
             QValueAxis *newAxisX = new QValueAxis();
             newAxisX->setTitleText("Distance (m)");
-            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setRange(1.0, 100000.0);
             newAxisX->setTickCount(11);
             chart->addAxis(newAxisX, Qt::AlignBottom);
             twoRaySeries->attachAxis(newAxisX);
             friisSeries->attachAxis(newAxisX);
+            otgSeries->attachAxis(newAxisX);
         } else {
             QLogValueAxis *newAxisX = new QLogValueAxis();
             newAxisX->setTitleText("Distance (m) [Log Scale]");
             newAxisX->setBase(10.0);
-            newAxisX->setRange(1.0, 100.0);
+            newAxisX->setRange(1.0, 100000.0);
             newAxisX->setMinorTickCount(8);
             newAxisX->setLabelFormat("%g");
             chart->addAxis(newAxisX, Qt::AlignBottom);
             twoRaySeries->attachAxis(newAxisX);
             friisSeries->attachAxis(newAxisX);
+            otgSeries->attachAxis(newAxisX);
         }
     });
 
