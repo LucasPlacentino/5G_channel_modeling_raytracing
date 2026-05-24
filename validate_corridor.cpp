@@ -181,17 +181,26 @@ QWidget* createThreeReflectionValidationPlot() {
         // 1-Bounce (Top wall: 1 segment)
         scene->addLine(0, 0, d/2, W, QPen(Qt::magenta, 1));
         scene->addLine(d/2, W, d, 0, QPen(Qt::magenta, 1));
+        //scene->addLine(0, 0, d/2, -W, QPen(Qt::magenta, 1));
+        //scene->addLine(d/2, -W, d, 0, QPen(Qt::magenta, 1));
 
         // 2-Bounce (Top then Bottom: divides X distance into 4 parts)
         scene->addLine(0, 0, d/4, W, QPen(Qt::darkCyan, 1));
         scene->addLine(d/4, W, 3*d/4, -W, QPen(Qt::darkCyan, 1));
         scene->addLine(3*d/4, -W, d, 0, QPen(Qt::darkCyan, 1));
+        //scene->addLine(0, 0, d/4, -W, QPen(Qt::darkCyan, 1));
+        //scene->addLine(d/4, -W, 3*d/4, W, QPen(Qt::darkCyan, 1));
+        //scene->addLine(3*d/4, W, d, 0, QPen(Qt::darkCyan, 1));
 
         // 3-Bounce (Top, Bottom, Top: divides X distance into 6 parts)
         scene->addLine(0, 0, d/6, W, QPen(Qt::darkYellow, 1));
         scene->addLine(d/6, W, 3*d/6, -W, QPen(Qt::darkYellow, 1));
         scene->addLine(3*d/6, -W, 5*d/6, W, QPen(Qt::darkYellow, 1));
         scene->addLine(5*d/6, W, d, 0, QPen(Qt::darkYellow, 1));
+        //scene->addLine(0, 0, d/6, -W, QPen(Qt::darkYellow, 1));
+        //scene->addLine(d/6, -W, 3*d/6, W, QPen(Qt::darkYellow, 1));
+        //scene->addLine(3*d/6, W, 5*d/6, -W, QPen(Qt::darkYellow, 1));
+        //scene->addLine(5*d/6, -W, d, 0, QPen(Qt::darkYellow, 1));
 
         scene->setSceneRect(-20, -W - 20, d + 40, 2*W + 40);
         showValidationScene(scene, "Urban Canyon Geometry Snapshot (d=50m), only showing half the rays (symmetric)");
