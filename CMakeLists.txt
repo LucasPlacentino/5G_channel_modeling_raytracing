@@ -38,6 +38,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         parameters.h
         raysegment.h raysegment.cpp
         resources.qrc
+        validate_freespace.h validate_freespace.cpp
+        validate_wall.h validate_wall.cpp
 
 
 
