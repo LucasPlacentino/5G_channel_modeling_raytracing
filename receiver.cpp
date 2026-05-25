@@ -154,9 +154,13 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
 
     // Initial E-field amplitude at 1m
     // for THIS transmitter
-    qreal E0 = sqrt(60.0 * transmitter->gain * transmitter->power);
+    //qreal E0 = sqrt(60.0 * transmitter->gain * transmitter->power);
 
-    complex<qreal> E_tot(0, 0);
+    // coher
+    //complex<qreal> E_tot(0, 0);
+
+    //qreal E_mod_squared_tot = 0.0; // incoherent power sum
+    qreal P_RX_tot = 0.0; // direct power sum from all rays
 
     // Get the coordinates of this specific transmitter
     QPointF tx_pos(transmitter->x(), transmitter->y());
@@ -175,15 +179,29 @@ qreal Receiver::computeTotalPower(Transmitter* transmitter) // returns final tot
 
         qreal d = ray->getTotalDistance();
 
-        // nchoerent addition: E_n = E0 * (Coeffs) * exp(-j*beta*d) / d
-        complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
-        E_tot += E_ray;
+        // E_n = E0 * (Coeffs) * exp(-j*beta*d) / d
+        //complex<qreal> E_ray = E0 * ray_coeff * exp(-j * beta_0 * d) / d;
+
+        // incoher power sum
+        //qreal E_mod_squared = effective_height * pow(abs(E_ray), 2);
+        //E_mod_squared_tot += E_mod_squared;
+        // or // P_RX = P_TX * G_TX * G_RX * (lambda / (4 * pi * d))^2 * |coeffs|^2 // directly
+        qreal coeff_mag_sq = qPow(abs(ray_coeff), 2);
+        qreal P_ray = transmitter->power * transmitter->gain * G_RX * qPow(lambda / (4.0 * M_PI * d), 2) * coeff_mag_sq;
+        P_RX_tot += P_ray;
+
+        // coehr sum
+        //E_tot += E_ray;
     }
 
-    qreal h_e = lambda / M_PI; // Effective height for lambda/2 dipole
+    // incoherend power: P_RX = (1 / 8*R_a) * Sum{|h_e * E_ray|^2}
+    //qreal incoherent_power = (1.0 / (8.0 * R_a)) * E_mod_squared_tot;
+    //qreal res = incoherent_power;
 
-    // P_RX = (1 / 8*Ra) * |h_e * E_tot|^2
-    qreal res = (1.0 / (8.0 * Ra)) * pow(abs(h_e * E_tot), 2);
+    qreal res = P_RX_tot; // direct power sum from all rays, should be close to incoherent sum if many rays
+
+    // coher : P_RX = (1 / 8*R_a) * |Sum{h_e * E_tot}|^2
+    //qreal res = (1.0 / (8.0 * R_a)) * pow(abs(effective_height * E_tot), 2);
 
     if (res != res) qDebug() << "computeTotalPower: NaN !!!";
 
